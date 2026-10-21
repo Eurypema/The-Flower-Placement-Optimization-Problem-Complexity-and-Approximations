@@ -1,0 +1,341 @@
+\documentclass[11pt]{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows}
+\usepackage{geometry}
+\usepackage{verbatim}
+\geometry{margin=1in}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{result}[theorem]{Result}
+\newtheorem*{remark}{Remark}
+\usepackage{stmaryrd} 
+\usepackage{natbib}            
+\usepackage{amsfonts}
+
+
+\title{Flower Placement Optimization Problem}
+
+\author{Gordon Tin}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\section{Problem Statement}
+
+Given an explicitly represented $n \times m$ king graph $G$, let $H$ be an induced subgraph of $G$ and let $V \subseteq \mathbb{Z}^2$ be the set of cells in $H$. Every cell in $V(G) \setminus V(H)$ is blocked and unused. We say that cells $u$ and $v$ in $V$ are adjacent if and only if the Chebyshev distance between the two cells is 1, i.e., $||u-v||_{\infty} = 1$. 
+We define a \emph{planting} as a map $\ell: V \to \{E, C_0, C_1\}$ and say that a vertex $v$ is \emph{colored} if $\ell(v) \in \{C_0, C_1\}$ and is \emph{empty} otherwise. We call the $C_0, C_1$ assignments \emph{colors}. For all $v \in V$, let $r_v, b_v$ be the number of $C_0$ and $C_1$ neighbors of $v$, respectively. Then 
+\[\mathrm{Score}(v) = \begin{cases}
+    p(r_v, b_v) & \text{if } \ell (v) = E, \\
+    0  & \text{otherwise}
+\end{cases}\]
+where 
+\[
+p(r_v, b_v) = \begin{cases}
+    \frac{3 r_v b_v}{5 (r_v + b_v) (r_v + b_v -1)} & \text{if } r_v, b_v \geq 1, \\
+    0 & \text{otherwise.}
+\end{cases}
+\]
+Let the aggregate of the scores in a planting be denoted $Y_H(\ell)$. The decision problem then is whether or not there exists a planting such that, for some threshold $T$, there exists a planting $Y_H(\ell) \geq T$.
+
+\section{NP}
+
+To reduce the optimization problem to a decision problem, we want to find a choice of disjoint sets $C_0, C_1 \subseteq V(G')$ such that the total payoff $\sum_{v \in V(H) \setminus (C_0 \cup C_1)} p(x_v, y_v) \geq T$, where $T$ is the target value. In this section, $C_0$ and $C_1$ also denote the sets of vertices assigned the corresponding colors. By solving a sequence of such decision problems, we can identify the maximum achievable sum. 
+
+Let $C$ be a Boolean circuit that outputs $1$ (true) if and only if there exists a valid assignment, i.e., a choice of $C_0$ and $C_1$, with a total payoff $\geq T$. Let also $a_i$ be a Boolean variable true exactly when vertex $i$ is in $C_0$, and $b_i$ be a Boolean variable true exactly when vertex $i$ is in $C_1$. These variables are the inputs to our circuit, with those vertices in the complement of $H$ being set to false, as they cannot be meaningfully chosen.
+
+We introduce a constraint of disjointness, where no vertex can belong to $C_0 \cap C_1$; formally, for each vertex $i$, $\neg (a_i \land b_i)$.
+
+For each vertex $v \in V(H)$, let $N(v)$ denote the set of neighbors of $v$ in a graph $H$. Let:
+\begin{enumerate}
+    \item $x_v = \sum_{u \in N(v)} a_u$
+    \item $y_v = \sum_{u \in N(v)} b_u$
+\end{enumerate}
+
+These sums are bounded by 8, so we can represent each of $x_v$ and $y_v$ with four bits (to cover 0-8). The circuit will enforce that these encoded values indeed equal the sum of the corresponding neighbor-selection bits by introducing auxiliary Boolean variables to encode the binary digits of $x_v$ and add constraints to link them to the $a_u, b_u$ of neighbors, representable as a subcircuit that outputs the binary sum of inputs $a_u$ for $u \in N(v)$ and similarly for $b_u$.
+
+Next, we need to incorporate the diminishing return function $p(x,y)$ for each vertex into our logic. Note that $p(x,y)$ is a rational function, so to encode this, we can clear the denominators by multiplying both sides of the equation
+\[z_v= \frac{3x_v y_v}{5(x_v+y_v)(x_v+y_v-1)}\]
+by the denominator:
+\[5(x_v + y_v)(x_v + y_v-1) \cdot z_v = 3 \cdot (x_v \cdot y_v)\]
+This gives us a polynomial constraint that forces $z_v$ to equal the value of the diminishing returns function given $x_v$ and $y_v$, which is easier to encode in a Boolean logic setting. As $x_v, y_v$ are small, the relationship can be enforced by a small subcircuit (with multipliers and adders for the arithmetic). Importantly, as $x_v + y_v$ grows, the ratio $z_v$ grows more slowly, encapsulating the property of diminishing returns. 
+
+Finally, we need to enforce that the sum of all vertex payoffs is at least $T$. Let $S = \sum_{v \in G'} z_v$ be the total payoff. We compute this sum $S$ from all of the individual $z_v$ values with pairwise additions since there are a polynomial number of terms. Then we assert that $S \geq T$. In a Boolean circuit, a comparator subcircuit can output 1 if $S$'s binary value is $\geq$ the binary representation of $T$. We then constrain the circuit's output to be true if and only if this comparator outputs 1 and all of the earlier constraints hold true. By the NP-completeness of CircuitSAT, this shows that our decision version is in NP.
+
+\section{Path Lemmas}
+
+Some preliminary definitions need to be made first. 
+Let $N(v)$ be the neighbors of $v$ and $\mathrm{Im}_{\ell}(N(v))$ denote the set of colorings of the neighbors of $v$. 
+Let $P_t$ be the path on $t$ vertices, where the length of $P_t$ is $t-1$. Let $Y_H(S; \ell)$ denote the sum of the scores of a planting $\ell$ on a subgraph $S \subseteq H$, where the assignment of cells on $H \setminus S$ is considered in the score calculation. We first provide some elementary bounds on the scoring formula.
+
+\begin{lemma} \label{lem:elementarybounds}
+For every planting on a graph $H$,
+    \begin{enumerate}
+        \item For all $v \in V$, $\mathrm{Score}(v) \leq \frac{3}{10}$
+        \item If $\mathrm{deg}(v) = 1$, then $\mathrm{Score}(v) = 0$.
+        \item $\mathrm{deg}(v) = 2$ and $\mathrm{Score}(v) > 0$ if and only if $\ell(v) = E$ and $C_0, C_1 \in \mathrm{Im}_\ell (N(v))$
+        \item Adjacent degree-2 vertices cannot both be such that both contribute positively.
+        \item If a vertex has degree 4 and all its neighbors are colored, then the max score is $\frac{1}{5}$, precisely when $\ell(v)=E$ and $r_v=b_v=2$.
+    \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\text{ }
+    \begin{enumerate}
+        \item Noting $p(r_v, b_v)\neq0$ if and only if $r_v, b_v \geq 1$, we assume $r_v, b_v \geq 1$. Since 
+        \[\frac{(r_v - b_v)^2}{4} = \frac{r_v^2 -2r_v b_v + b_v^2}{4} = \frac{(r_v + b_v)^2}{4}-r_v b_v \geq 0,\]
+        we have, given $r_v + b_v \geq 2$, 
+        \[\frac{3 r_v b_v}{5 (r_v + b_v) (r_v + b_v -1)} \leq \frac{3}{5} \cdot \frac{1}{4} \cdot \frac{r_v + b_v}{r_v + b_v-1} \leq \frac{3}{5} \cdot \frac{1}{4} \cdot {2} = \frac{3}{10}.\]
+        \item If $\mathrm{deg}(v) = 1$, then necessarily either $r_v=0$ or $b_v=0$.
+        \item If $\mathrm{deg}(v) = 2$ and $\mathrm{Score}(v)>0$, then $r_v = 1 = b_v$ (hence $C_0, C_1 \in \mathrm{Im}_\ell (N(v))$) and $\ell(v) = E$ by definition. If, likewise, $C_0, C_1 \in \mathrm{Im}_\ell (N(v))$ and $\ell(v) = E$, then it necessarily follows by definition that $\mathrm{deg}(v) = 2$ and $\mathrm{Score}(v)>0$. 
+        \item A vertex $v$ such that $\mathrm{deg}(v)=2$ requires both neighbors to be assigned colors, so adjacent vertices cannot have a positive contribution.
+        \item A colored vertex scores $0$, so we assume that our vertex $v$ is empty. If all of its neighbors are colored, then if three neighbors share a color, we have a score of $\frac{3}{20}$, whereas if only two neighbors share a color, we have a score of $\frac{1}{5}$.
+    \end{enumerate}
+\end{proof}
+
+\begin{corollary} \label{cor:armcontribute}
+    Given a path $P_{t}$, at most $\lfloor \frac{t-1}{2} \rfloor$ vertices can contribute.
+\end{corollary}
+\begin{proof}
+    The case $t=1$ is immediate by Lemma \ref{lem:elementarybounds}.2. For $t=2$, note that endpoints, being degree 1, cannot contribute by Lemma \ref{lem:elementarybounds}.2. Therefore, only internal vertices can contribute, of which $t-2$ exist. Since the optimal planting on the path needs to alternate colors every other empty vertex, even-indexed vertices are left empty and odd-indexed vertices are colored, since the first vertex is an endpoint that necessarily needs to be colored since it cannot contribute. Therefore, given that an even-indexed vertex $z_{2j}$ is internal precisely when
+    \[2 \leq 2j \leq t-1 \quad \text{ or, equivalently } \quad 1 \leq j \leq \lfloor \frac{t-1}{2} \rfloor\]
+    it follows that there are at most $\lfloor \frac{t-1}{2} \rfloor$ contributing vertices.
+\end{proof}
+
+\begin{corollary} \label{cor:altcolorpattern}
+    Given optimal coloring, some planting $\ell:V \to \{E, C_0, C_1\}$, and an isolated path $P_t:t=2s+1$, with vertices $z_1, z_2, \dots, z_t$, if $\ell (z_1) = C_0$, then
+    \[
+    \ell(z_k) = \begin{cases}
+        E & \text{if } 2|k\\
+        C_0 & \text{if } k \equiv 1 (\mathrm{mod} \text{ } 4) \\
+        C_1 & \text{if } k \equiv 3 (\mathrm{mod} \text{ } 4) \\
+    \end{cases}
+    \]
+\end{corollary}
+
+\begin{proof}
+    Suppose $P_t$ is optimally colored. As noted in the proof of Corollary \ref{cor:armcontribute}, every odd-indexed vertex alternates colors, so 
+    \[\ell(z_1) = C_0, \ell(z_2) = E, \ell(z_3) = C_1, \ell(z_4) = E,\dots\]
+    Afterwards, the pattern repeats.
+\end{proof}
+
+\begin{corollary} \label{cor:optplantingevenemptoddcolor}
+     If $t=2s+1 \geq 3$, then every optimal planting has contributors at positions $2, 4, \dots, 2s$, while vertices at positions $1, 3, \dots, 2s+1$ alternate in color.
+\end{corollary}
+
+\begin{proof}
+    Immediate from Corollary \ref{cor:altcolorpattern}.
+\end{proof}
+
+\begin{corollary} \label{cor:endpointcolor}
+    Endpoints have the same color as the source vertices if $s$ is even and opposite colors if $s$ is odd. 
+\end{corollary}
+
+\begin{proof}
+    Immediate from Corollary \ref{cor:optplantingevenemptoddcolor}.
+\end{proof}
+
+\begin{lemma} \label{lem:optimalplanting}
+    For isolated paths $P_t:t \geq 1$ and plantings $\ell$, 
+    \[Y_H(P_t;\ell) \leq \frac{3}{10} \lfloor \frac{t-1}{2} \rfloor\]
+    with equality if and only if $\ell$ is optimally colored. 
+\end{lemma}
+
+\begin{proof}
+    Since all internal vertices are degree 2, every internal vertex can contribute only $\frac{3}{10}$, exactly when two neighbors are colored but do not share the same color. By Corollary \ref{cor:armcontribute}, there are at most $\lfloor \frac{t-1}{2} \rfloor$ contributing vertices.
+    
+    Note that in an optimal planting, as a consequence of Corollary \ref{cor:optplantingevenemptoddcolor}, every even-indexed internal vertex has one neighbor of every color. All remaining vertices score $0$, and there are $\lfloor \frac{t-1}{2} \rfloor$ scoring vertices by Corollary \ref{cor:armcontribute}, attaining the bound. If $\ell$ was not optimally colored, then it would not be the case that every even-indexed internal vertex has one neighbor of every color, so the total score would be strictly less than the bound. 
+\end{proof}
+
+
+\begin{lemma} \label{lem:armlemmas}
+    Let $c, z_1, \dots, z_{4k}, x:k \geq 1$ be a path of $4k+1$ edges, where $c$ and $x$ may have additional neighbors. Let the score of only the internal vertices $z_i$ be denoted $S$. Then
+    \begin{enumerate}
+        \item $S \leq \frac{3}{5} k$
+        \item If $\ell(c)=E$ and $\ell(z_1)=E$ then $S \leq \frac{3}{5}k-\frac{3}{10}$
+        \item If $\ell(c) = E$ and $S = \frac{3}{5}k$, contributor vertices are exactly $z_2,z_4, \dots, z_{4k}.$ All other vertices are assigned alternating colors. In particular, $\ell(z_1) = \ell(x)$.
+        \item Either prescribed color of $x$ extends to planting with $\ell(c) = E$ and $S = \frac{3}{5}k$.
+    \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\text{ }
+\begin{enumerate}
+    \item Directly follows from Lemma \ref{lem:elementarybounds} and Corollary \ref{cor:armcontribute}, applying with unscored endpoints. 
+    \item If $\ell(c)=E$ and $\ell(z_1)=E$, then by Lemma \ref{lem:elementarybounds}.4, neither can contribute so, noting Corollary \ref{cor:armcontribute}, at most $2k-1$ internal vertices can contribute. The result follows from Lemma \ref{lem:elementarybounds}.
+    \item $S = \frac{3}{5}k$ implies optimal coloring per Lemma \ref{lem:armlemmas}.1. As arms have $4k+1$ edges and $\ell(c) = E$, the remaining $4k+1$ vertices form a $P_{2(2k)+1}$ subpath, and, applying Lemma \ref{lem:optimalplanting} and Corollary \ref{cor:endpointcolor}, the result is immediate.
+    \item Follows immediately from Corollary \ref{cor:optplantingevenemptoddcolor}, with the prescribed color of $x$ and setting $\ell(c) = E$.
+\end{enumerate}
+\end{proof}
+
+\section{Gadget Lemmas}
+
+To prove that our problem is NP-Complete, we reduce from monotone 2-in-4 SAT in which every variable appears exactly three times, which is known to be NP-Complete by \citet [Theorem~21, p.~337]{scheffler2022distance}. The earlier planar hardness result is given by \citet[Lemma~3]{KaraKratochvilWood2007}. The problem is defined in \cite {scheffler2022distance} as follows: given a boolean formula $\phi$ in conjunctive normal form, where every clause contains four nonnegated variables, is there an assignment of the variables of $\phi$ such that each clause of $\phi$ contains two variables with value 1 and two variables with value 0?
+
+We reduce our problem to monotone 2-in-4 SAT by creating a graph $H$ where being able to find an optimal coloring is equivalent to solving monotone 2-in-4 SAT, and therefore if our problem had an efficient way to optimally color our grid, then it must be able to color our gadget graph, which is only possible if $\mathcal{P} = \mathcal{NP}$. We reduce the SAT problem to a graph in the following manner:
+
+Let the whole SAT instance $F$ have $n$ variables, $m$ clauses, and an occurrence set $I$ such that $|I| = 3n = 4m$. For every variable, create a vertex $x_i$; for every clause, create likewise a vertex $c_j$. Noting that we do not precolor any vertices, replace every occurrence $e$ with an endpoint pair $(c_j, x_i)$, with a private path of length $4k_e + 1$ for some natural number $k_e \geq 1$. Add a 2-edge private path $x_i, a_i, b_i$ to each variable afterwards. Call this graph $H$. We demonstrate that $H$ can actually be constructed in polynomial time:
+
+In our graph, each $c_j$ is degree 4, and each $x_i$ has three occurrence paths and 1 private tail. Every other vertex is degree 2, except $b_i$, which has degree 1. We call each occurrence path an \emph{arm}. An arm of length $4k +1$ has $4k$ internal vertices of degree 2 and $2$ external vertices; one is degree 4 and is called the \emph{endpoint}, while the other is degree 4 and is called the \emph{center point}. For our gadget, we work with a four-armed gadget, each arm being of length $4k+1$. Formally, we define our clause gadget and tail gadget as
+\[C_j = \{c_j\} \cup \bigcup_{e \in I_j}\{z_{e,1}, \dots, z_{e, 4k_e}\}, \qquad X_i = \{x_i, a_i, b_i\}\]
+respectively. The graph representation of our clause gadget is provided below:
+\[
+\begin{tikzcd}[
+  row sep={2.5em,between origins},
+  column sep={2.5em,between origins}
+]
+x_{i_1} \arrow[dr, dash]
+&&&&&&&& x_{i_2} \arrow[dl, dash] \\
+& z_{1,4k+1} \arrow[dr, dash]
+&&&&&& z_{2,4k+1} \arrow[dl, dash] \\
+&& \cdots \arrow[dr, dash]
+&&&& \cdots \arrow[dl, dash] \\
+&&& z_{1,1} \arrow[dr, dash]
+&& z_{2,1} \arrow[dl, dash] \\
+&&&& c_j \arrow[dl, dash] \arrow[dr, dash] \\
+&&& z_{4,1} \arrow[dl, dash]
+&& z_{3,1} \arrow[dr, dash] \\
+&& \cdots \arrow[dl, dash]
+&&&& \cdots \arrow[dr, dash] \\
+& z_{4,4k+1} \arrow[dl, dash]
+&&&&&& z_{3,4k+1} \arrow[dr, dash] \\
+x_{i_4} &&&&&&&& x_{i_3}
+\end{tikzcd}
+\]
+
+We prove some lemmas and bounds regarding our gadgets and build towards our reduction.
+
+\begin{lemma} \label{lem:partition}
+    The subgraphs $C_1, \dots, C_m, X_1, \dots, X_n$ partition $V(H)$. Consequently, for every planting $\ell$,
+    \[Y_H (\ell) = \sum_{j=1}^m Y_H(C_j;\ell) + \sum_{i=1}^n Y_H(X_i;\ell).\]
+\end{lemma}
+
+\begin{proof}
+    By construction, every clause vertex and every private arm interior belongs to exactly one clause block. Likewise, every variable vertex and its two private tail vertices belong to exactly one variable block. These exhaust the construction. Summing the vertex scores over this partition gives the identity.
+\end{proof}
+
+\begin{lemma} \label{lem:gadgetbound}
+    Let 
+    \[A_j = \frac{3}{5} \sum_{e \in C_j} k_e, \qquad B_j = A_j + \frac{1}{5}.\]
+    Then every planting $Y_H(C_j; \ell)$ is such that
+    \[Y_H(C_j; \ell) \leq B_j\]
+    with equality forcing $\ell(c_j) = E$, all four arms to attain internal bounds $\frac{3}{5}k_e$, and the variable endpoints $x_1, x_2, x_3, x_4$ to be such that $\ell(x_1) = \ell (x_2) = C_0$ and $\ell(x_3) = \ell (x_4) = C_0$.
+\end{lemma}
+
+\begin{proof}
+    Suppose optimality. Then, by Corollary \ref{cor:armcontribute}, at most $2k$ can contribute and, by Lemma \ref{lem:elementarybounds}, this contribution is at most $\frac{3}{10}$. Therefore, given we have four arms of variable length $4k_e$, the total sum of contributions is
+    \[\frac{3}{10}\sum_{e \in C_j} 2k_e = \frac{3}{5} \sum_{e \in C_j} k_e = A_j.\]
+    If $c_j$ is colored, then its score is $0$, so $Y_H(C_j;\ell)\leq A_j<B_j$.
+    Now suppose $c_j$ is empty. If at least one neighbor of $c_j$ is empty, the corresponding arm loses at least $\frac{3}{10}$ from its bound by Lemma~\ref{lem:armlemmas}.2. The center scores at most $\frac{3}{10}$ by Lemma~\ref{lem:elementarybounds}.1. Hence
+    \[
+    Y_H(C_j;\ell)\leq A_j-\frac{3}{10}+\frac{3}{10}=A_j<B_j.
+    \]
+    Thus, any possible increase at the center is offset by the loss along its arm, so an empty neighbor cannot improve the total gadget score. It remains to consider $c_j$ empty with all four neighbors colored. By Lemma~\ref{lem:elementarybounds}.5, the maximum contribution of the center is $\frac15$. Hence,
+    \[Y_H(C_j;\ell) \leq \frac{3}{5} \sum_{e \in C_j} k_e + \frac{1}{5} = B_j\]
+    so it follows that every planting $Y_H(C_j; \ell)$ is such that
+    \[Y_H(C_j; \ell) \leq \frac{3}{5} \sum_{e \in C_j} k_e + \frac{1}{5}\]
+    as this is the optimum upper bound, with equality being achieved when the planting is optimal. By Lemma \ref{lem:armlemmas}, in this optimal coloring, endpoints are the same color as that of vertices adjacent to the center point. By Lemma \ref{lem:elementarybounds}.5, the endpoints must be colored such that two are $C_0$ and two are $C_1$.
+\end{proof}
+
+\begin{corollary} \label{cor:optplantcond}
+    Suppose that $C_j$ is such that $\ell(c_j) = E$ and the neighbors of $c_j$ are exactly two $C_0$ and two $C_1$. Then the gadget admits an optimal planting.
+\end{corollary}
+
+\begin{proof}
+    By Lemma \ref{lem:armlemmas}.3, the endpoints of $C_j$ are the same color as the neighbors that are at the other end of the gadget arm that border the center point. Thus, the variable endpoints $x_1, x_2, x_3, x_4$ are such that $\ell(x_1) = \ell (x_2) = C_0$ and $\ell(x_3) = \ell (x_4) = C_0$. Applying the planting in Lemma \ref{lem:armlemmas}.3 provides us with an optimal coloring, so each arm attains its internal bound $\frac{3}{5}k_e$. Hence, by Lemma \ref{lem:gadgetbound}, the threshold $T$ is attained, so this is an optimal planting.
+\end{proof}
+
+\begin{lemma} \label{lem:tailbound}
+    For $X_i = \{x_i, a_i, b_i\}$, every planting satisfies 
+    \[Y_H (X_i; \ell) \leq \frac{3}{10}\]
+    irrespective of the planting labels on the occurrence paths incident to $x_i$. If $x_i$ is colored, then the bound is attained by letting $\ell(a_i) = E$ and coloring $b_j$ opposite to $x_i$.
+\end{lemma}
+
+\begin{proof}
+    Suppose an optimal planting. We have two cases. Suppose $\ell(x_i) = E$. Then $a_i$ is forced to be colored to make $x_i$ contribute. If so, then the assignment of $b_i$ is irrelevant since it does not contribute. Thus, we can force $x_i$ to contribute, and the maximum contribution per Lemma \ref{lem:elementarybounds} is $\frac{3}{10}$. Now suppose $\ell(x_i) \neq E$. Then we can color $b_i$ and have the assignment $\ell(a_i) = E$ to make $a_i$ contribute. In either case, 
+    \[Y_H (X_i; \ell) \leq \frac{3}{10}\]
+\end{proof}
+
+\begin{lemma} \label{lem:plantbound}
+    Let $K = \sum_{e\in I}k_e$ and set 
+    \[T= \sum_{j=1}^m B_j + \frac{3}{10}n = \frac{3}{10}n + \frac{3}{5}K + \frac{1}{5}m.\] 
+    Then all plantings $Y_H(\ell)$ satisfy
+    \[Y_H(\ell) \leq T.\] 
+\end{lemma}
+
+\begin{proof}
+    Follows from Lemma \ref{lem:gadgetbound} and Lemma \ref{lem:tailbound} by summing the components in Lemma \ref{lem:partition}.
+\end{proof}
+
+\begin{corollary} \label{cor:thresholdgadgetbound}
+    $Y_H(\ell) = T$ if and only if every gadget has a planting $Y_H(C_j; \ell)$ such that $Y_H(C_j; \ell) = B_j$.
+\end{corollary}
+
+\begin{proof}
+    The forward direction is trivial and follows immediately from Lemma \ref{lem:plantbound}. Now suppose that every gadget has a planting $Y_H(C_j; \ell)$ such that $Y_H(C_j; \ell) = B_j$. Then by Lemma \ref{lem:tailbound}, each tail can contribute at most $\frac{3}{10}$. By the proof of Lemma \ref{lem:tailbound}, in either case where $x_i$ is colored or not, there exists a coloring to make it contribute maximally, so the result is immediate. 
+\end{proof}
+
+\begin{observation} \label{obs:sattogadget}
+    The formula $F$ has a 2-in-4 satisfying assignment if and only if there exists a configuration for $\{x_1, \dots, x_n\}$ such that every clause $c_j$ has exactly an input sum of $2$. 
+\end{observation}
+
+\begin{proof}
+    The input sum counts exactly the occurrences assigned 1, so this is the definition of a 2-in-4 satisfying assignment.
+\end{proof}
+
+\begin{proposition} \label{prop:equivalence}
+    The formula $F$ has a 2-in-4 satisfying assignment if and only if there exists a planting $Y_H(\ell)$ such that $Y_H(\ell) \geq T$. 
+\end{proposition}
+
+\begin{proof}
+    Suppose $F$ has a 2-in-4 satisfying assignment. By Observation \ref{obs:sattogadget}, there exists a configuration for $\{x_i\}$ such that every clause $c_j$ has exactly an input sum of $2$. Now, let $0 \cong C_0$ and $1 \cong C_1$. Then the condition of all four inputs having a total sum of 2 is equivalent to having $c_j$ have exactly two $C_0$ neighbors and two $C_1$ neighbors. Extending this to our present gadget construction, given arms of length $4k_e + 1$, by Corollary \ref{cor:endpointcolor}, the endpoints of the arms are the same color as their starting vertices, which neighbor $c_i$. Therefore, our gadget for $c_i$ has exactly $2$ $C_0$ endpoints and $2$ $C_1$ endpoints. By Corollary \ref{cor:optplantcond}, this gadget has an optimal planting of score $B_j$. Extending this to every clause, by Corollary \ref{cor:thresholdgadgetbound} we have a planting $Y_H(\ell)$ such that $Y_H(\ell) = T$.
+
+    Now suppose that we have an optimal planting $Y_H(\ell)$ such that $Y_H(\ell) \geq T$. Then, by Lemma \ref{lem:plantbound}, $Y_H(\ell) = T$. By Corollary \ref{cor:thresholdgadgetbound}, each gadget has an optimum planting. By Lemma \ref{lem:optimalplanting}, this forces the endpoints to be such that there are exactly two $C_0$ and two $C_1$ endpoints, so, by Corollary \ref{cor:endpointcolor}, this implies that the neighbors of $c_j$ have the same color assignment, which, by our interpretation, forces each clause $c_j$ to have exactly an input sum of $2$, hence giving us a 2-in-4 satisfying assignment for the formula $F$. By Observation \ref{obs:sattogadget}, we are done. 
+\end{proof}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}
+
+\section{Grid Realization}
+Proposition~\ref{prop:equivalence} proves the score equivalence on the constructed graph. To finish the reduction, we must place that graph on an explicitly represented king grid. 
+
+\begin{proposition} \label{prop:polyH}
+    Let $F$ be a formula with a 2-in-4 satisfying assignment, $n$ variables, $m$ clauses, and occurrence set $I$. Then, in polynomial time, one can choose integers $k_e \geq 1$ for $e \in I$ and construct the graph $H$ on the square lattice.
+\end{proposition}
+
+\begin{proof}
+    Let $G_F$ be the planar incidence multigraph of $F$ with a bipartition $(C,X)$ consisting of clauses $C_i \in C$ and variables $x_i \in X$, $N= n+m$ vertices, and maximum degree 4. We can directly use the geometric construction in the proof of \citet[Proposition~4.1, p.~240-241]{demange2013matching} to do most of the work for us. We reproduce the construction with minor alterations, chiefly specifying variable assignments.
+
+    First, we embed $G_F$ into the grid and subdivide edges to transform it into a partial subgraph. Afterwards, we perform a $4^{256}$ expansion on $G_F$. The choice of $256$ is arbitrary, but we choose it to ensure that around every variable, we have no other variables except those that are a part of its occurrence paths. For any $u_0$ in the subgrid corresponding to a vertex of $C$, replace $u_0$ with one of its neighbors in a subgrid and make appropriate modifications on $P_{uv}$ for any neighbor $v$ of $u$ in $G_F$, where $P_{uv}$ is the replacement path for the edge $(u,v)$ in $G_F$.  In this manner, the length of each $P_{uv}$ is modified by $1$, so the number of local edges $y$ added to $P_{uv}$ by inserting a detour is $y = 1 \pm 1$. This process results in every $P_{uv}$ being such that $|P_{uv}| \equiv 1 \text{ mod }4$, where $u,v$ are the endpoints of $P_{uv}$, representing the original edge $e=(u,v)$ that $P_{uv}$ represents.
+
+    All that remains for us is to add private tails to the variables. Per construction, each variable $x_i$ has three incidence paths, so let $d_i$ be the unused cardinal direction unit vector. Add to $x_i$ the vertices 
+    \[a_i = x_i + d_i, \qquad b_i = x_i + 2d_i.\]
+    As we chose our expansion exponent to give sufficient berth, the only new edges resulting from these additional vertices are $(x_i,a_i)$ and $(a_i,b_i)$. Hence, our private tails are exactly of length 2. As our occurrence paths are also length $4k_e +1$ and have private interiors, our construction is exactly the graph $H$.
+\end{proof}
+
+\begin{proposition}
+    Let $F$ be a formula with a 2-in-4 satisfying assignment, $n$ variables, $m$ clauses, and occurrence set $I$. Then, in polynomial time, one can choose integers $k_e \geq 1$ for $e \in I$ and construct a polynomial-size square king graph whose usable cells induce the graph $H$.
+\end{proposition}
+
+\begin{proof}
+By \ref{prop:polyH}, we already know that $H$ can be constructed in polynomial time. All that remains is to embed $H$ in the king graph. By \citet[Lemma~24, p.~338-339]{scheffler2022distance}, $G_F$ has an orthogonal rook embedding computable in polynomial time, using the drawing result of \cite{tamassia1989gridembed}. The definition of an OR-embedding is provided in \citet[Definition~23, p.~338]{scheffler2022distance}. 
+
+    
+\end{proof}

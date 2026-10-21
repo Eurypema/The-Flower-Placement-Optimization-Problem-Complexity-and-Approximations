@@ -1,0 +1,118 @@
+\documentclass[11pt]{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows}
+\usepackage{geometry}
+\usepackage{verbatim}
+\geometry{margin=1in}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{example}{Example}
+\newtheorem*{remark}{Remark}
+\usepackage{stmaryrd} 
+\usepackage{natbib}            
+\usepackage{amsfonts}
+\newtheorem{result}{Result}
+
+\title{Flower Placement Optimization Problem}
+\author{Gordon Tin}
+\date{April 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Problem Statement}
+
+Given an $n \times m$ king-graph $G$, define $A$ and $B$ as two disjoint sets of vertices, representing two different placements within $G'$, and let the function $p(x,y)$ be defined as: 
+\[p(x,y)= \frac{0.3xy}{0.5(x+y)^{2}-0.5(x+y)}\]
+where $x$ and $y$ represent the number of adjacent vertices in $A$ and $B$, respectively. Let $G'$ be the induced subgraph of $G$ after the removal of $k$ vertices from $G$ at random and, following this, the removal of all connected components of size $\leq 2$.
+Our objective is to determine the optimal placement of vertices $A$ and $B$ such that the total probability across all vertices in $G'$ is maximized: \[\sum_{x,y \in G'} p(x,y)\] 
+As \(p(x,y)\) declines, the diminishing returns effect in placement incentivizes optimal placement, rather than naively increasing x and y indiscriminately.
+
+We will first reduce the problem to an instance of CircuitSAT to show that it is, in fact, NP. Next, we will show that it is NP-Complete. 
+
+\section{Proof of NP}
+
+To reduce the optimization problem to a decision problem, we want to find a choice of disjoint sets $A, b \subset V(G')$ such that the total payoff $\sum_{v \in G'} p(x_v, y_v) \geq T$, where $T$ is the target value. Solving a sequence of such decision problems, we can identify the maximum achievable sum. 
+
+Let $C$ be a Boolean circuit that outputs $1$ (true) if and only if there exists a valid assignment, i.e., a choice of $A$ and $B$, with a total payoff $\geq T$. Let also $a_i$ be a Boolean variable true exactly when vertex $i$ is in $A$, and $b_i$ be a Boolean variable true exactly when vertex $i$ is in $B$. These variables are the inputs to our circuit, with those vertices in the complement of $G'$ being set to false as they cannot be meaningfully chosen.
+
+We introduce a constraint of disjointedness, where no vertex can belong to $A \cap B$; formally, for each vertex $i$, $\neg (a_i \land b_i)$.
+
+For each vertex $v \in G'$, let $N(v)$ denote the set of neighbors of $v$ in a graph $G'$. Let:
+\begin{enumerate}
+    \item $x_v = \sum_{u \in N(v)} a_u$
+    \item $y_v = \sum_{u \in N(v)} b_u$
+\end{enumerate}
+
+These sums are bounded (at most 8 for an interior vertex's degree), so we can represent each of $x_v$ and $y_v$ with 4 bits (to cover 0-8). The circuit will enforce that these encoded values indeed equal the sum of the corresponding neighbor-selection bits by introducing auxiliary Boolean variables to encode the binary digits of $x_v$ and add constraints to link them to the $a_u, b_u$ of neighbors, representable as a subcircuit that outputs the binary sum of inputs $a_u$ for $u \in N(v)$ and similarly for $b_u$.
+
+Next, we need to incorporate the diminishing return function $p(x,y)$ for each vertex into our logic. Note that $p(x,y)$ is a rational function, so, to encode this, we can clear the denominators by multiplying both sides of the equation
+\[z_v= \frac{0.3x_v y_v}{0.5(x_v+y_v)^{2}-0.5(x_v+y_v)}\]
+by the denominator and then scaling by 10:
+\[5((x_v + y_v)^2 - (x_v + y_v)) \cdot z_v = 3 \cdot (x_v \cdot y_v)\]
+This gives us a polynomial constraint that forces $z_v$ to equal the value of the diminishing returns function given $x_v$ and $y_v$, which is easier to encode in a Boolean logic setting. As $x_v, y_v$ are small, the relationship can be enforced by a small subcircuit (with multipliers and adders for the arithmetic). Importantly, as $x_v + y_v$ grows, the ratio $z_v$ grows slower, encapsulating the property of diminishing returns.
+
+Finally, we need to enforce that the sum of all vertex payoffs is at least $T$. Let $S = \sum_{v \in G'} z_v$ be the total payoff. We compute this sum $S$ from all of the individual $z_v$ values with pairwise additions since there are a polynomial number of terms. Then we assert that $S \geq T$. In a Boolean circuit, a comparator subcircuit can output 1 if $S$'s binary value is $\geq$ the binary representation of $T$. We then constrain the circuit's output to be true if and only if this comparator outputs 1 and all of the earlier constraints hold true. By the NP-completeness of CircuitSAT, this shows that our decision version is in NP.
+
+Now that we have proved that this problem is in NP, we will now prove that the problem is NP-Complete.
+
+\section{Monotone 2-in-4 SAT}
+
+To prove that our problem is NP-Complete, we reduce from monotone 2-in-4 SAT, which is known to be NP-Complete \citep{KaraKratochvilWood2007}. The problem is defined in \citep{scheffler2022distance} as follows: given a boolean formula $\phi$ in conjunctive normal form, where every clause contains four nonnegated variables, is there an assignment of the variables of $\phi$ such that each clause of $\phi$ contains two variables with value 1 and two variables with value 0?
+
+\subsection{Path Lemmas}
+
+We begin by investigating simple paths. We provide some simple lemmas regarding paths.
+\begin{lemma} \label{lem:pathlength}
+    For a path of length $k$, there are a maximum of $\lfloor\frac{k-1}{2}\rfloor$ contributing vertices. 
+\end{lemma}
+\begin{proof}
+    Trivial.
+\end{proof}
+Now, for our gadget, we work with a four-armed gadget, each arm being of length $4k+3$, including the center $c_j$. 
+\[
+\begin{tikzcd}[
+  row sep={2.5em,between origins},
+  column sep={2.5em,between origins}
+]
+x_{i_1} \arrow[dr, dash]
+&&&&&&&& x_{i_2} \arrow[dl, dash] \\
+& z_{1,4k+1} \arrow[dr, dash]
+&&&&&& z_{2,4k+1} \arrow[dl, dash] \\
+&& \cdots \arrow[dr, dash]
+&&&& \cdots \arrow[dl, dash] \\
+&&& z_{1,1} \arrow[dr, dash]
+&& z_{2,1} \arrow[dl, dash] \\
+&&&& c_j \arrow[dl, dash] \arrow[dr, dash] \\
+&&& z_{4,1} \arrow[dl, dash]
+&& z_{3,1} \arrow[dr, dash] \\
+&& \cdots \arrow[dl, dash]
+&&&& \cdots \arrow[dr, dash] \\
+& z_{4,4k+1} \arrow[dl, dash]
+&&&&&& z_{3,4k+1} \arrow[dr, dash] \\
+x_{i_4} &&&&&&&& x_{i_3}
+\end{tikzcd}
+\]
+By Lemma \ref{lem:pathlength}, each arm should be able to provide individually $2k+1$ vertices
+
+\begin{lemma}
+    
+\end{lemma}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}
+

@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{graphicx} % Required for inserting images
+\newtheorem{result}{Result}
+
+\title{Flower Placement Optimization Problem}
+\author{Gordon Tin}
+\date{February 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Given a $n \times m$ grid $G$, where interior vertices are degree 8, corner vertices are degree 3, and edge vertices are degree 5, define $A$ and $B$ as two disjoint sets of vertices, representing two different placements within $G'$, and let the function $p(x,y)$ be defined as: 
+\[p(x,y)= \frac{0.3xy}{0.5(x+y)^{2}-0.5(x+y)}\]
+where $x$ and $y$ represent the number of adjacent vertices in $A$ and $B$, respectively. Let $G'$ be the induced subgraph of $G$ after the removal of $k$ vertices from $G$ at random and, following this, the removal of all connected components of size $\leq 2$.
+Our objective is to determine the optimal placement of vertices $A$ and $B$ such that the total probability across all vertices in G' is maximized: \[S = \sum_{x,y \in G'} p(x,y)\] 
+As \(p(x,y)\) declines, the diminishing returns effect in placement incentivizes optimal placement, rather than naively increasing x and y indiscriminantly. 
+
+We explore the use of weighted k-sets to prove that this problem is NP-Hard. In the weighted k-set problem, we are given a collection of sets, each of which contain up to k elements, along with a weight assigned to each set. Our goal is to select a subcollection of these sets such that our total weight is maximized. 
+
+Our goal is to show that, if we had a polynomial-time algorithm for optimally choosing A and B, we would be able to solve the weighted k-set packing problem in polynomial time. 
+
+In our case, let $U$ be the set of vertices on $G'$ and let $S_i \subset U$ correspond with a selection of A and B along with the vertices that are codominated by A and B. Let $p(S_i) = \sum_{x,y \in S_i} p(x,y)$ denote the total sum of probabilities for $S_i$.
+
+
+
+\end{document}

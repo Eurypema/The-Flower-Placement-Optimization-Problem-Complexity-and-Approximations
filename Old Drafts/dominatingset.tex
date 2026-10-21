@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{graphicx} % Required for inserting images
+\newtheorem{result}{Result}
+
+\title{Flower Placement Optimization Problem}
+\author{Gordon Tin}
+\date{February 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Given a $n \times m$ grid $G$, where interior vertices are degree 8, corner vertices are degree 3, and edge vertices are degree 5, define $A$ and $B$ as two disjoint sets of vertices, representing two different placements within $G'$, and let the function $p(x,y)$ be defined as: 
+\[p(x,y)= \frac{0.3xy}{0.5(x+y)^{2}-0.5(x+y)}\]
+where $x$ and $y$ represent the number of adjacent vertices in $A$ and $B$, respectively. Let $G'$ be the induced subgraph of $G$ after the removal of $k$ vertices from $G$ at random and, following this, the removal of all connected components of size $\leq 2$.
+Our objective is to determine the optimal placement of vertices $A$ and $B$ such that the total probability across all vertices in G' is maximized: \[\sum_{x,y \in G'} p(x,y)\] 
+As \(p(x,y)\) declines, the diminishing returns effect in placement incentivizes optimal placement, rather than naively increasing x and y indiscriminantly. Consequently, this problem can be modeled by having $A$ and $B$ be two minimum disjoint dominating sets, the minimization of which is a known NP-Complete problem. We begin with the first result:
+
+\begin{result}
+Given that either $A$ or $B$ is a dominating set, then, in an optimal solution, the other is a dominating set as well.
+\end{result}
+
+\begin{proof}
+We first need to show that it it indeed the case that the optimal solution always implies that $A$ and $B$ are dominating sets. To do this, we need to first remove all connected components where their vertices \(|V|\leq 2\), since they can never contribute to the total probability.
+
+Suppose we have an optimal placement in $G'$, which we denote as $(A, B) \subset G'$, and suppose that, without loss of generality, $A$ is not a dominating set. Then the probability 
+\[S = \sum_{v\in G'} p(x_{v}, y_{v})\]
+is maximized, and there exists a vertex $v \in G'$ such that $N(v) \cap A = \emptyset$. Due to the previous deletion, we can assume that $|N(v)| > 1$, as otherwise $N(v) \cup v$ would comprise a connected component of size $\leq 2$, which would have been deleted. Let $u \in N(v)$. Then, noting that $u \notin A$ or otherwise $N(v) \cap A \neq \emptyset$, either $u \in B$, or $u \notin B$. In either case, let us define a new configuration $A' = A \cup \{u\}$ and $B' = B$ (or $B' = B/
+\{u\}$ if $u \in B$). Then, given that $p(x,y)$ is maximized when $x=1$ and $y=1$, then, as $u$ has at most three neighbors that are not in $N(v)$, the total probability would be maximally negatively impacted by $3 \cdot p(1,2) = 3 \cdot (0.1)$ at most. 
+
+However, given that we assume that $B$ is a dominating set on $G'$, we note that the total probability is positively contributed by, at the very least, $2 \cdot p(1,1) = 2 \cdot (0.3)$, so there is a net positive change. If so, then this contradicts the assumption that $S$ is maximal. Thus, given $B$ is a dominating set in $G'$, any optimal placement requires $A$ to also be a dominating set in $G'$. Mutatis mutandis, we conclude that, if either $A$ or $B$ is a dominating set in $G'$, then it must be that, in an optimal solution, the other is a dominating set in $G'$ as well. 
+\end{proof}
+
+We now show that, in an optimal solution, either one of these sets must be dominating, and by Result 1, the optimal solution uses two dominating sets, or the optimal solution can be modeled with dominating sets. 
+
+\begin{result}
+    Given an optimal solution $(A,B)$ of $G'$, either A or B must be a dominating set or we can add vertices to either $A$ or $B$ to make them dominating sets.
+\end{result}
+
+\begin{proof}
+Suppose we have an optimal solution where neither A nor B are dominating sets. Then there exists a vertex $v \in G'$ such that $N(v) \cap (A \cup B) = \emptyset$, that is, v is not dominated by any vertex. Note that $|N(v)| > 0$. 
+
+If the neighborhood of v has contributing vertices, then
+
+\textbf{Case 1:} If $N(u) \cap (A \cup B) \neq \emptyset$, i.e., $u$ is under the domination of some set, which, without loss of generality, we suppose is $A$, then we
+\end{proof}
+
+Thus, we can conclude the following result:
+
+\begin{result}
+    Any optimal solution $(A,B)$ of $G'$ either is such that $A$ and $B$ are both disjoint dominating sets, or can be modeled with disjoint dominating sets. 
+\end{result}
+\begin{proof}
+    Noting the cases in the proof of Result 2, we can use Result 1 to demonstrate that, given one of $A$ or $B$, the other must be a dominating set in the case of Case 1b and Case 2. 
+\end{proof}
+\end{document}
+
+Noting that $|N(u)/(N(v)\cup \{v\})| \leq 5$,  
+
+
+
+
+We consider two cases:
+
+\textbf{Case 1: }If $N(u) \cap (A \cup B) = \emptyset$, we have two subcases:
+
+\textbf{Case 1a: } If $N(u)\cap N(v)\neq \emptyset$, then we can let, without loss of generality, $v \in A$ and $u \in B$ and therefore strictly increase the total probability by at least $p(1,1)$, getting a contradiction. Otherwise, we may repeat this argument with $w \in N(u)$. 
+
+\textbf{Case 1b: }If it is the case that $N(w)\cap N(v)\neq \emptyset$, then, if $N(w)/\{u\} = \emptyset$, then, by assigning $v \in A$ and $w \in B$, we strictly increase the total probability $S$ and we get a contradiction. 
+
+\textbf{Case 1c: } Otherwise, if it is the case that $N(w)\cap N(v)= \emptyset$, we can set $u \in B$ and make $B$ a dominating set. 
+
+\textbf{Case 2: }Otherwise, suppose that $N(u) \cap (A \cup B \neq \emptyset)$. Then we have a vertex $w \in N(u)$ such that $w \in A$, without loss of generality. Then we can let $v \in B$ and make $u$ contribute $p(1,1)$ to the total probability-- contradiction.  

@@ -1,0 +1,98 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{graphicx} % Required for inserting images
+\newtheorem{result}{Result}
+
+\title{Flower Placement Optimization Problem}
+\author{Gordon Tin}
+\date{April 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Given a $n \times m$ grid $G$, where interior vertices have degree $\leq 8$, corner vertices have degree $\leq 3$, and edge vertices have degree $\leq 5$, define $A$ and $B$ as two disjoint sets of vertices, representing two different placements within $G'$, and let the function $p(x,y)$ be defined as: 
+\[p(x,y)= \frac{0.3xy}{0.5(x+y)^{2}-0.5(x+y)}\]
+where $x$ and $y$ represent the number of adjacent vertices in $A$ and $B$, respectively. Let $G'$ be the induced subgraph of $G$ after the removal of $k$ vertices from $G$ at random and, following this, the removal of all connected components of size $\leq 2$.
+Our objective is to determine the optimal placement of vertices $A$ and $B$ such that the total probability across all vertices in $G'$ is maximized: \[\sum_{x,y \in G'} p(x,y)\] 
+As \(p(x,y)\) declines, the diminishing returns effect in placement incentivizes optimal placement, rather than naively increasing x and y indiscriminately.
+
+We will first reduce the problem to an instance of CircuitSAT to show that it is, in fact, NP. Next, we will show that it is NP-Complete. 
+
+\section{High-Level NP Reduction}
+
+To reduce the optimization problem to a decision problem, we want to find a choice of disjoint sets $A, b \subset V(G')$ such that the total payoff $\sum_{v \in G'} p(x_v, y_v) \geq T$, where $T$ is the target value. Solving a sequence of such decision problems, we can identify the maximum achievable sum. 
+
+Let $C$ be a Boolean circuit that outputs $1$ (true) if and only if there exists a valid assignment, i.e., a choice of $A$ and $B$, with a total payoff $\geq T$. Let also $a_i$ be a Boolean variable true exactly when vertex $i$ is in $A$, and $b_i$ be a Boolean variable true exactly when vertex $i$ is in $B$. These variables are the inputs to our circuit, with those vertices in the complement of $G'$ being set to false as they cannot be meaningfully chosen.
+
+We introduce a constraint of disjointedness, where no vertex can belong to $A \cap B$; formally, for each vertex $i$, $\neg (a_i \land b_i)$.
+
+For each vertex $v \in G'$, let $N(v)$ denote the set of neighbors of $v$ in a graph $G'$. Let:
+\begin{enumerate}
+    \item $x_v = \sum_{u \in N(v)} a_u$
+    \item $y_v = \sum_{u \in N(v)} b_u$
+\end{enumerate}
+
+These sums are bounded (at most 8 for an interior vertex's degree), so we can represent each of $x_v$ and $y_v$ with 4 bits (to cover 0-8). The circuit will enforce that these encoded values indeed equal the sum of the corresponding neighbor-selection bits by introducing auxiliary Boolean variables to encode the binary digits of $x_v$ and add constraints to link them to the $a_u, b_u$ of neighbors, representable as a subcircuit that outputs the binary sum of inputs $a_u$ for $u \in N(v)$ and similarly for $b_u$.
+% Note-- we need to actually draw out this subcircuit, but theres nothing preventing it in theory. In truth, this part is a bit vague...
+
+Next, we need to incorporate the diminishing return function $p(x,y)$ for each vertex into our logic. Note that $p(x,y)$ is a rational function, so, to encode this, we can clear the denominators by multiplying both sides of the equation
+\[z_v= \frac{0.3x_v y_v}{0.5(x_v+y_v)^{2}-0.5(x_v+y_v)}\]
+by the denominator and then scaling by 10:
+\[5((x_v + y_v)^2 - (x_v + y_v)) \cdot z_v = 3 \cdot (x_v \cdot y_v)\]
+This gives us a polynomial constraint that forces $z_v$ to equal the value of the diminishing returns function given $x_v$ and $y_v$, which is easier to encode in a Boolean logic setting. As $x_v, y_v$ are small, the relationship can be enforced by a small subcircuit (with multipliers and adders for the arithmetic). Importantly, as $x_v + y_v$ grows, the ratio $z_v$ grows slower, encapsulating the property of diminishing returns.
+
+Finally, we need to enforce that the sum of all vertex payoffs is at least $T$. Let $S = \sum_{v \in G'} z_v$ be the total payoff. We compute this sum $S$ from all of the individual $z_v$ values with pairwise additions since there are a polynomial number of terms. Then we assert that $S \geq T$. In a Boolean circuit, a comparator subcircuit can output 1 if $S$'s binary value is $\geq$ the binary representation of $T$. We then constrain the circuit's output to be true if and only if this comparator outputs 1 and all of the earlier constraints hold true. By the NP-completeness of CircuitSAT, this shows that out decision version is in NP.
+%and, by a reverse reduction, one can argue NP-hardness (intuitively, the flexibility in the choice of $A, B$ can simulate arbitrary logical choices, making the optimization NP-Hard). 
+Next, we detail the actual construction encoding these requirements.
+
+\section{Encoding}
+
+We now move onto the actual building of the Boolean circuit step-by-step to encode the above problem. The circuit will have multiple components enforcing each constraint and computing necessary values. Each logic gate mentioned is a component of circuit, and wires connect outputs of some gates to inputs of others to carry signals, i.e. truth values. The overall output gate will indicate whether or not the selection satisfies all constraints meets the target sum. The encoding is as follows:
+
+\subsection{Input Variable for Vertex Selection}
+
+Create two input bits for each vertex $i \in V(G')$, i.e., $a_i$ and $b_i$. Setting $a_i = 1$ means that the vertex $i$ in in the set $A$, while $b_i = 1$ means that it is in the set $B$. If a vertex is in the complement of $G'$, we treat its inputs as fixed 0. These are the free inputs that the SAT circuit will choose to satisfy the output condition.
+
+\subsection{Disjointness Constraint}
+
+For each vertex $i$, we include a small subcircuit to ensure $a_i$ and $b_i$ are not both true. This can be done with an AND gate and a NOT gate. Compute $c_i = \neg(a_i \land b_i)$. Then the output $c_i$ will be 1 if and only if the disjointness constraint holds at vertex $i$. To make this constraint hard, we feed all $c_i$ signals into a cascade of AND gates to produce a single signal $C_{\text{disjoint}}$ which is 1 when no vertex violates the disjointness rule, and 0 otherwise.
+
+\subsection{Adjacency Constraint}
+
+For each vertex $v \in G'$, we build a subcircuit to count how many of its neighbors are in $A$ and how many are in $B$. The neighbor set $N(v)$ is known from the graph structure, so we take the inputs $\{ a_u : u \in N(v)\}$ and feed them into an adder circuit that outputs the binary sum of these bits. Because each $a_u$ is 0/1, summing them effectively counts true values. We then implement this with a cascade of adders, e.g., pairing up bits to add them, then adding in the next, and so forth. The result is a binary number on $\lceil \text{log}_2(\text{deg}(v)+1)\rceil$ wires that encode $x_v$. Since $\text{deg}(v) \leq 8$, we can use 4 wires to represent $x_v$. In a similar manner, we construct another adder circuit for the neighbor's $b_u$ bits, yielding the binary representation of $y_v = \sum_{u \in N(v)}b_u$. These subcircuits ensure the adjacency relationships are accounted for: the values $x_v$, $y_v$ automatically reflect how many neighbors of $v$ were chosen in each set. If a neighbor is not selected in either set, it contributes 0; if it is in $A$, it contributes to $x_v$; if it is in $B$, it contributes to $y_v$. Note that, as $A \cap B = \emptyset$, no neighbor will contribute to both counts. So far, then, we have a small adder for each vertex's neighbors, all running in parallel in the circuit.
+
+\subsection{Diminishing Return Function}
+
+Next, for each vertex $v$, we create a subcircuit that takes the binary representations of $x_v$ and $y_v$ as inputs and produces the value $p(x_v, y_v)$ as output. One possible implementation is described below, using truth tables:
+
+Because $x_v$ and $y_v$ both range only from 0 to at most 8, there are only 81 possible pairs $(x_v, y_v)$ -- in fact, there are fewer when we consider that $x_v + y_v \leq \text{deg}(v)$. Therefore, we could pre-compute the numerical values of $p(x,y)$ (or a scaled integer representation of it) for each possible pair and then encode this as a combinatorial logic table. For instance, we can introduce signals for each possible pairing and use a network of AND/OR gates to select the correct precomputed $p$ value based on the bits of $x_v$ and $y_v$,, analogous to a multiplexer or a ROM lookup implemented in gates.
+
+The output of this subcircuit for a vertex $v$ will be a set of wires (that is, a binary number) representing the contribution $p(x_v, y_v)$ in scaled integer form (multiplied by some common denominator to avoid fractions). Let $P_v$ be defined as the binary-encoded value corresponding to $p(x_v, y_v)$. Assuming we scaled by some constant factor for all vertices (say, 4200), then $P_v$ can be treated as an integer proportional to the actual payoff.
+
+\subsection{Vertex Contribution Summation}
+
+Now we construct a global adder tree to sum up the contributions from all vertices, taking each vertex's payoff value $P_v$ and feeding these into a multi-input addition circuit, done potentially by cascading pairwise adders. The final output of this addition is a binary number $S$ that equals $\sum_{v \in G'} P_v$, which corresponds to the total payoff of $A$ and $B$. The sum of this sum in bits will depend on the number of vertices, but it will be polynomial; for example, if there are $N$ vertices, and each $P_v \leq 1280$, then the sum is $\leq 1280N$, requiring on the order of $\text{log}_2 (1260N)$ bits. 
+
+\subsection{Objective Threshold Check}
+
+The last component we need to include is a comparator subcircuit to ensure that the sum reaches some target $T$. We hard-wire the target value $T$ as a constant binary vector in the circuit, scaling it appropriately. We then design a comparator that takes $S$ and $T$ as inputs and outputs a signal $O_{\text{obj}} = 1$ if and only if $S \geq T$. This can be done by checking the bits of $S$ and $T$ from most significant to least significant bits. 
+
+\subsection{Constraint Conjugation}
+
+Finally, we wire the outputs of all major constraints to produce the circuit's single output. We need the circuit to output true (1) if and only if all conditions are satisfied and the objective threshold is met. Thus, given $C_{\text{disjoint}}$ from subsection 3.2 and $O_{\text{obj}}$ from subsection 3.6, we let $O_{\text{final}} = C_{\text{disjoint}} \land O_{\text{obj}}$, along with $\land$ for any other global constraint signals, if they exist. Then the final output $O_{\text{final}}$ is the single output of the entire circuit.
+
+\subsection{Concluding Remarks}
+
+Therefore, we have given a formal description as well as a constructive method for reducing the graph optimization instance to a CircuitSAT instance, demonstrating that the problem is not only in NP but also that the problem can be solved using SAT techniques.
+
+\section{NP-Hardness}
+
+Now that we have proved that this problem is in NP, we will now prove that the problem is NP-Complete
+\end{document}
+
