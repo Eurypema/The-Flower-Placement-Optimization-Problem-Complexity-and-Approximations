@@ -39,7 +39,7 @@ We study a placement optimization problem on induced subgraphs of $n \times m$ k
 
 \section{Background and Problem Statement} \label{sec:probstatement}
 
-The problem of optimally plantings originate from a flower planting minigame in the game Hello Kitty Island Adventure. There are online tools to simulate the planting as well as find optimal plantings for this minigame, but there has been no attempt on defining the complexity of the problem.
+The problem of optimally plantings originate from a flower planting minigame in the game Hello Kitty Island Adventure. There are online tools to simulate the planting as well as find optimal plantings for this minigame, but there has been no attempt (to the author's knowledge) on defining the complexity of the problem. The present note is to demonstrate that the task of optimization is NP-Hard.
 
 Given an explicitly represented $n \times m$ king graph $G$, let $H$ be an induced subgraph of $G$ and let $V \subseteq \mathbb{Z}^2$ be the set of cells in $H$. Every cell in $V(G) \setminus V(H)$ is blocked and unused. We say that cells $u$ and $v$ in $V$ are adjacent if and only if the Chebyshev distance between the two cells is 1, i.e., $||u-v||_{\infty} = 1$. 
 We define a \emph{planting} as a map $\ell: V \to \{E, C_0, C_1\}$ and say that a vertex $v$ is \emph{colored} if $\ell(v) \in \{C_0, C_1\}$ and is \emph{empty} otherwise. We call the $C_0, C_1$ assignments \emph{colors}. For all $v \in V$, let $r_v, b_v$ be the number of $C_0$ and $C_1$ neighbors of $v$, respectively. Then 
