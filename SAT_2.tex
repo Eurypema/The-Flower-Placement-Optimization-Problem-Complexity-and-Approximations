@@ -19,12 +19,13 @@
 \newtheorem{example}[theorem]{Example}
 \newtheorem{result}[theorem]{Result}
 \newtheorem*{remark}{Remark}
+\newtheorem*{theorema}{Theorem}
 \usepackage{stmaryrd} 
 \usepackage{natbib}            
 \usepackage{amsfonts}
 
 
-\title{Flower Placement Optimization Problem}
+\title{NP-Completeness of One-Round Flower Placement on King Grids}
 
 \author{Gordon Tin}
 \date{\today}
@@ -34,14 +35,15 @@
 \maketitle
 
 \begin{abstract}
-We study a placement optimization problem on induced subgraphs of $n \times m$ king graphs. Each vertex is assigned one of two colors or left empty, and empty vertices contribute to a total score as determined by the number of neighboring vertices of each color. We formulate the threshold decision problem and analyze its membership in NP. We derive sharp score bounds for paths and characterize optimal plantings on odd paths and on arms whose lengths are congruent to one modulo four. Using these results, we construct four-armed clause gadgets and private two-edge variable tails for a reduction from monotone 2-in-4 SAT with exactly three occurrences per variable. The resulting graph admits a planting attaining a specified global threshold if and only if the formula is satisfiable. We then demonstrate that we can derive this graph from the formula and embed it onto the king graph, all in polynomial time. Therefore, this placement problem is NP-complete, and optimizing it is therefore NP-Hard. 
+We study a placement optimization problem on induced subgraphs of $n \times m$ king graphs. Each vertex is assigned one of two colors or left empty, and empty vertices contribute to a total score as determined by the number of neighboring vertices of each color. We formulate the threshold decision problem and analyze its membership in NP. We then construct four-armed clause gadgets and private two-edge variable tails for a reduction from monotone 2-in-4 SAT with exactly three occurrences per variable. The resulting graph admits a planting attaining a specified global threshold if and only if the formula is satisfiable. We then demonstrate that we can derive this graph from the formula and embed it onto the king graph, all in polynomial time. Therefore, this placement problem is NP-complete, and optimizing it is therefore NP-Hard. 
 \end{abstract}
 
 \section{Background and Problem Statement} \label{sec:probstatement}
 
-The problem of optimally plantings originate from a flower planting minigame in the game Hello Kitty Island Adventure. There are online tools to simulate the planting as well as find optimal plantings for this minigame, but there has been no attempt (to the author's knowledge) on defining the complexity of the problem. The present note is to demonstrate that the task of optimization is NP-Hard.
+The optimal planting problem originates from a flower-planting minigame in the game Hello Kitty Island Adventure, where players can plant flowers on a plot and, over time, new flowers will grow on the plot with a chance that a hybrid flower will grow instead. The probability of a hybrid flower appearing is determined by a fixed function that takes as its parameters the flowers immediately adjacent to it. There is no limitation on how many flowers of any color can appear. 
+There are online tools \citep{auevi_hkia_flower} to simulate the planting as well as find optimal plantings for this minigame, but there has been no attempt (to the author's knowledge) to define the complexity of this particular planting problem. 
 
-Given an explicitly represented $n \times m$ king graph $G$, let $H$ be an induced subgraph of $G$ and let $V \subseteq \mathbb{Z}^2$ be the set of cells in $H$. Every cell in $V(G) \setminus V(H)$ is blocked and unused. We say that cells $u$ and $v$ in $V$ are adjacent if and only if the Chebyshev distance between the two cells is 1, i.e., $||u-v||_{\infty} = 1$. 
+We first present a formal treatment of the problem, restricting ourselves to the simplest case of only two flower colors and the expected yield after only one round: Given an explicitly represented $n \times m$ king graph $G$, let $H$ be an induced subgraph of $G$ and let $V \subseteq \mathbb{Z}^2$ be the set of cells in $H$. Every cell in $V(G) \setminus V(H)$ is blocked and unused. We say that cells $u$ and $v$ in $V$ are adjacent if and only if the Chebyshev distance between the two cells is 1, i.e., $||u-v||_{\infty} = 1$. 
 We define a \emph{planting} as a map $\ell: V \to \{E, C_0, C_1\}$ and say that a vertex $v$ is \emph{colored} if $\ell(v) \in \{C_0, C_1\}$ and is \emph{empty} otherwise. We call the $C_0, C_1$ assignments \emph{colors}. For all $v \in V$, let $r_v, b_v$ be the number of $C_0$ and $C_1$ neighbors of $v$, respectively. Then 
 \[\mathrm{Score}(v) = \begin{cases}
     p(r_v, b_v) & \text{if } \ell (v) = E, \\
@@ -50,17 +52,34 @@ We define a \emph{planting} as a map $\ell: V \to \{E, C_0, C_1\}$ and say that 
 where 
 \[
 p(r_v, b_v) = \begin{cases}
-    \frac{3 r_v b_v}{5 (r_v + b_v) (r_v + b_v -1)} & \text{if } r_v, b_v \geq 1, \\
+    0.3\frac{r_v b_v}{\binom{r_v + b_v}{2}} & \text{if } r_v, b_v \geq 1, \\
     0 & \text{otherwise.}
 \end{cases}
 \]
-Let
+Note that, given a random variable 
 \[
-Y_H(\ell)=\sum_{v\in V(H)}\mathrm{Score}(v).
+X_v = \begin{cases}
+    1 &\text{if a new hybrid flower spawns at $v$,}\\
+    0 &\text{otherwise.}
+\end{cases}
 \]
-The decision problem then is whether, for an explicitly represented king grid and its blocked cells, there exists a planting $\ell$ such that $Y_H(\ell) \geq T$ for a given threshold $T \in \mathbb{Q}$. The same scoring rule applies to an abstract finite graph $H$, using adjacency in $H$ to determine the neighbor counts.
+we have the expected value
+\[E[X_v] = \mathrm{Score}(v)\]
+and hence we can let
+\[
+Y_H(\ell)=\sum_{v\in V(H)}\mathrm{Score}(v) = \sum_vE[X_v] = E(\sum_v X_v)
+\]
+where the sum of cell probabilities is the expected number of spawned hybrid flowers. The decision problem then is whether, for an explicitly represented king grid and its blocked cells, there exists a planting $\ell$ such that $Y_H(\ell) \geq T$ for a given threshold $T \in \mathbb{Q}$. We assert the following, which we will prove at the conclusion of Section \ref{sec:gridreal}:
 
-\section{NP}
+\begin{theorema}
+    The flower placement problem is NP-Complete and maximizing it is NP-Hard.
+\end{theorema}
+
+We approach the proof of this theorem by first demonstrating membership in NP in Section \ref{sec:meminnp}. After proving some elementary bounds of our planting function in Section \ref{sec:elembound} and some lemmas on paths in Section \ref{sec:pathlem}, we construct $H$ in such a way that determining how many hybrid flowers can appear on $H$ is equivalent to solving an NP-Complete problem, in this case Planar Monotone 2-in-4 SAT, in Section \ref{sec:gadlem}. Finally, in Section \ref{sec:gridreal}, we demonstrate that this particular construction of $H$ can be constructed in polynomial time and therefore prove our complexity theorem.  
+
+\section{Membership in NP} \label{sec:meminnp}
+
+We first assert the following:
 
 \begin{lemma} \label{lem:NPmembership}
     The flower placement decision problem is in NP.
@@ -77,7 +96,7 @@ As these inputs are polynomial in size, the decision problem is in NP.
     
 \end{proof}
 
-\section{Elementary Bounds}
+\section{Elementary Bounds} \label{sec:elembound}
 
 We first provide some elementary bounds on the scoring formula. Let $N(v)$ be the neighbors of $v$ in $H$ and $\mathrm{Im}_{\ell}(N(v))$ denote the set of labels assigned to these neighbors. 
 
@@ -98,7 +117,7 @@ For every planting on a graph $H$,
         \item Noting $p(r_v, b_v)\neq0$ if and only if $r_v, b_v \geq 1$, we assume $r_v, b_v \geq 1$. Since 
         \[\frac{(r_v - b_v)^2}{4} = \frac{r_v^2 -2r_v b_v + b_v^2}{4} = \frac{(r_v + b_v)^2}{4}-r_v b_v \geq 0,\]
         we have, given $r_v + b_v \geq 2$, 
-        \[\frac{3 r_v b_v}{5 (r_v + b_v) (r_v + b_v -1)} \leq \frac{3}{5} \cdot \frac{1}{4} \cdot \frac{r_v + b_v}{r_v + b_v-1} \leq \frac{3}{5} \cdot \frac{1}{4} \cdot {2} = \frac{3}{10}.\]
+        \[0.3\frac{r_v b_v}{\binom{r_v + b_v}{2}} =\frac{3 r_v b_v}{5 (r_v + b_v) (r_v + b_v -1)} \leq \frac{3}{5} \cdot \frac{1}{4} \cdot \frac{r_v + b_v}{r_v + b_v-1} \leq \frac{3}{5} \cdot \frac{1}{4} \cdot {2} = \frac{3}{10}.\]
         \item If $\mathrm{deg}(v) = 0$, then both $r_v=0$ and $b_v =0$. If $\mathrm{deg}(v) = 1$, then either $r_v=0$ or $b_v=0$. IN either case, the result is immediate. 
         \item Suppose $\mathrm{deg}(v)=2$. Then if $\mathrm{Score}(v)>0$, then $r_v = 1 = b_v$ (hence $C_0, C_1 \in \mathrm{Im}_\ell (N(v))$) and $\ell(v) = E$ by definition. If, likewise, $C_0, C_1 \in \mathrm{Im}_\ell (N(v))$ and $\ell(v) = E$, then it necessarily follows by definition that $\mathrm{Score}(v)>0$. 
         \item A vertex $v$ such that $\mathrm{deg}(v)=2$ requires both neighbors to be assigned colors, so adjacent vertices cannot have a positive contribution.
@@ -106,7 +125,7 @@ For every planting on a graph $H$,
     \end{enumerate}
 \end{proof}
 
-\section{Path Lemmas}
+\section{Path Lemmas} \label{sec:pathlem}
 
 We now pivot to working with path objects. Let $P_t$ be the path on $t$ vertices, where the length of $P_t$ is $t-1$. For a vertex set $S\subseteq V(H)$, define
 \[
@@ -200,7 +219,7 @@ and \emph{external} otherwise.
 \end{enumerate}
 \end{proof}
 
-\section{Gadget Lemmas}
+\section{Gadget Lemmas} \label{sec:gadlem}
 
 To prove that our problem is NP-Complete, we reduce from planar monotone 2-in-4 SAT in which every variable appears exactly three times, which is known to be NP-Complete by \citet [Theorem~21, p.~337]{scheffler2022distance}. Here, planarity means that the incidence graph of variables and clauses is planar. The problem is defined in \citet [p.~336] {scheffler2022distance} as follows: given a boolean formula $F$ in conjunctive normal form, where every clause contains four nonnegated variables, is there an assignment of the variables of $F$ such that each clause of $F$ contains two variables with value 1 and two variables with value 0? 
 
@@ -331,7 +350,7 @@ We prove some lemmas and bounds regarding our gadgets and build towards our redu
 \end{lemma}
 
 \begin{proof}
-    Suppose $F$ has a 2-in-4 satisfying assignment $\sigma$. By Observation \ref{obs:sattogadget}, there exists a configuration for $\{x_i\}$ such that every clause $c_j$ has exactly an input sum of $2$. Assign $\ell(x_i)=C_{\sigma(x_i)}$ to each variable vertex. Then every clause has exactly two variable endpoints of each color, counted by occurrence. By Corollary \ref{cor:optplantcond}, there is a coloring such that $Y_H(C_j;\ell)=B_j$, which is attained by extending these colors to every clause center and arm interior. For every $i$, set $\ell(a_i) = E$ and color $b_i$ opposite to $x_i$. Lemma \ref{lem:tailbound} then gives $Y_H(X_i; \ell) = \frac{3}{10}$. Extending this to every clause, by Corollary \ref{cor:thresholdgadgetbound} we have a planting $\ell$ such that $Y_H(\ell) = T$.
+    Suppose $F$ has a 2-in-4 satisfying assignment $\sigma$. By Observation \ref{obs:sattogadget}, there exists a configuration for $\{x_i\}$ such that every clause $c_j$ has exactly an input sum of $2$. Assign $\ell(x_i)=C_{\sigma(x_i)}$ to each variable vertex. Then every clause has exactly two variable endpoints of each color, counted by occurrence. By Corollary \ref{cor:optplantcond}, there is a planting such that $Y_H(C_j;\ell)=B_j$, which is attained by extending these colors to every clause center and arm interior. For every $i$, set $\ell(a_i) = E$ and color $b_i$ opposite to $x_i$. Lemma \ref{lem:tailbound} then gives $Y_H(X_i; \ell) = \frac{3}{10}$. Extending this to every clause, by Corollary \ref{cor:thresholdgadgetbound} we have a planting $\ell$ such that $Y_H(\ell) = T$.
 
     Conversely, suppose that we have an optimal planting $\ell$ such that $Y_H(\ell) \geq T$. Then, by Lemma \ref{lem:plantbound}, $Y_H(\ell) = T$. By Corollary \ref{cor:thresholdgadgetbound}, $Y_H(C_j;\ell)=B_j$ for every clause. By Lemma \ref{lem:gadgetbound}, this forces the endpoints to be such that there are exactly two $C_0$ and two $C_1$ endpoints, so, by Lemma \ref{lem:armlemmas}.3, this implies that the neighbors of $c_j$ have the same color assignment. 
     
@@ -386,28 +405,7 @@ All that remains is checking that no unwanted adjacencies occur on $U''$, as oth
 \[||L(p) - L(q)||_\infty =1 \iff ||p-q||_1 = 1.\]
 Let $a = x_1 - x_2$ and $b = y_1 - y_2$. Since we are working in two dimensions, this simplifies to
 \[\max\{|a+b|, |a-b|\} = 1\iff |a| + |b| = 1\]
-noting that $L(p) -L(q) = (a+b, a-b)$.
-
-For the forward direction, suppose $\max\{|a+b|, |a-b|\} = 1$. Then either:
-\begin{enumerate}
-    \item $|a+b| = 1$: 
-    Suppose $|a| + |b| \neq 1$. Then either $a$ or $b$ is negative (but not both). If so, then $|a-b|$ should be greater than $|a+b|$; contradiction. Hence, $|a| + |b| = 1$.
-    \item $|a-b| = 1$: 
-    Suppose $|a| + |b| \neq 1$. Then either
-    \begin{enumerate}
-        \item $|a| + |b| < 1$: 
-        Then, as $a,b$ are integers, $|a| + |b| = 0$. Hence $a = b = 0$, but $|0 - 0| \neq 1$; contradiction.
-        \item $|a| + |b| > 1$: 
-        Then $|a| + |b| > |a-b| \geq |a+b|.$ As $|a| + |b| > |a-b|$, then $a$ and $b$ share a sign. Hence $|a+b| = |a| + |b| > 1$. But $\max\{|a+b|, |a-b|\} = 1$; contradiction.
-    \end{enumerate}
-    Therefore, $|a| + |b| = 1$. 
-\end{enumerate}
-Hence, $\max\{|a+b|, |a-b|\} = 1 \Rightarrow |a| + |b| = 1.$ 
-
-For the backward direction, suppose that $|a| + |b| = 1$. As $a, b \in \mathbb{Z}$, this forces, without loss of generality, $a = 0$ and $b = \pm 1$, so $\max\{|a+b|, |a-b|\} = 1$. Hence, $\max\{|a+b|, |a-b|\} = 1 \Leftarrow |a| + |b| = 1$ and, by the forward direction, 
-\[\max\{|a+b|, |a-b|\} = 1 \iff |a| + |b| = 1.\]
-
-Hence, there are no unwanted adjacencies in our embedding, as two points in $U''$ are adjacent if and only if they are adjacent in $U'$. Therefore, $U''$ induces $H$. We note that, by the proof of \citet[Lemma~24, pp. 338-339]{scheffler2022distance}, the original embedding has $\mathcal{O}(n^2)$ area. Our constant expansion
+noting that $L(p) -L(q) = (a+b, a-b)$. This is obviously true since, if $a,b$ share signs, then $|a+b| = |a| + |b|$; otherwise, $|a-b| = |a| + |b|$. Hence, there are no unwanted adjacencies in our embedding, as two points in $U''$ are adjacent if and only if they are adjacent in $U'$. Therefore, $U''$ induces $H$. We note that, by the proof of \citet[Lemma~24, pp. 338-339]{scheffler2022distance}, the original embedding has $\mathcal{O}(n^2)$ area. Our constant expansion
 and bounded local modifications preserve polynomial dimensions. Hence, the $(L'+W') \times (L' + W')$ king graph is likewise polynomial in $n$, so we are done. 
 
 \end{proof}
@@ -424,7 +422,7 @@ We can now assert the following theorem:
 
 \section*{AI Assistance}
 
-ChatGPT was used to revise exposition and clarify definitions as well as identify gaps in arguments. The author takes responsibility for the mathematical claims and references in the draft.
+ChatGPT was used to revise exposition and manuscript structure for clarity, search for information, and identify gaps in proofs. The author takes responsibility for the mathematical claims and references in the draft.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
