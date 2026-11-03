@@ -406,7 +406,7 @@ Given that each path is such that every occurrence path is of length $4k_e + 1$ 
 
 Note that in the proof of Corollary~6 in \citet[pp.~14-15]{brunner2026solo}, by rotating $U'$ by $45^\circ$ and then scaling by $\sqrt{2}$, rook moves on a chessboard can become bishop moves. In the same manner, we can embed $U'$ on a king grid. We start by translating $U'$ so that all of its coordinates are nonnegative and lie in a $[0, L'] \times [0, W']$ grid. Then, applying the linear transformation
 \[L(x,y) = (x+y, x-y)\]
-to all vertices, then translating the graph again by shifting it upwards by $W'$,  we obtain coordinates in a $[0,L' + W']^2$ square. A king grid with $[0,L' + W'+1]^2$ dimensions is therefore sufficient to contain our transformed $U'$. After embedding, note that the edges occupy only the diagonals of the king grid. Block every unused cell and let our embedded graph be denoted $U''$. 
+to all vertices, then translating the graph again by shifting it upwards by $W'$,  we obtain coordinates in a $[0,L' + W']^2$ square. A king grid with $L' + W'+1$ cells on each side is therefore sufficient to contain our transformed $U'$. After embedding, note that the edges occupy only the diagonals of the king grid. Block every unused cell and let our embedded graph be denoted $U''$. 
 
 All that remains is checking that no unwanted adjacencies occur on $U''$, as otherwise it would not induce $H$. Specifically, given points $p,q \in U'$, where $p = (x_1, y_1)$ and $q = (x_2, y_2)$, we want to prove that
 \[||L(p) - L(q)||_\infty =1 \iff ||p-q||_1 = 1.\]
