@@ -41,7 +41,7 @@ We study a placement optimization problem on induced subgraphs of $n \times m$ k
 \section{Background and Problem Statement} \label{sec:probstatement}
 
 The optimal planting problem originates from a flower-planting minigame in the game Hello Kitty Island Adventure, where players can plant flowers on a plot and, over time, new flowers will grow on the plot with a chance that a hybrid flower will grow instead. The probability of a hybrid flower appearing is determined by a fixed function that takes as its parameters the flowers immediately adjacent to it. There is no limitation on how many flowers of any color can appear. 
-There are online tools \citep{auevi_hkia_flower} to simulate the planting as well as find optimal plantings for this minigame. However, to the author's knowledge, the computational complexity of maximizing expected yield (at least for the model defined below) has not been previously established. 
+There are online tools, such as that by \citet{auevi_hkia_flower}, to simulate the planting as well as find optimal plantings for this minigame. However, to the author's knowledge, the computational complexity of maximizing expected yield (at least for the model defined below) has not been previously established. 
 
 We first present a formal treatment of the problem, restricting ourselves to the simplest case of only two flower colors and the expected yield after only one round: Given an explicitly represented $n \times m$ king graph $G$, let $H$ be an induced subgraph of $G$ and let $V \subseteq \mathbb{Z}^2$ be the set of cells in $H$. Every cell in $V(G) \setminus V(H)$ is blocked and unused. We say that cells $u$ and $v$ in $V$ are adjacent if and only if the Chebyshev distance between the two cells is 1, i.e., $||u-v||_{\infty} = 1$. 
 We define a \emph{planting} as a map $\ell: V \to \{E, C_0, C_1\}$ and say that a vertex $v$ is \emph{colored} if $\ell(v) \in \{C_0, C_1\}$ and is \emph{empty} otherwise. We call the $C_0, C_1$ assignments \emph{colors}. For all $v \in V$, let $r_v, b_v$ be the number of $C_0$ and $C_1$ neighbors of $v$, respectively. Then 
@@ -69,13 +69,16 @@ and hence we can let
 \[
 Y_H(\ell)=\sum_{v\in V(H)}\mathrm{Score}(v) = \sum_vE[X_v] = E(\sum_v X_v)
 \]
-where the sum of cell probabilities is the expected number of spawned hybrid flowers. The decision problem then is whether, for an explicitly represented king grid and its blocked cells, there exists a planting $\ell$ such that $Y_H(\ell) \geq T$ for a given threshold $T \in \mathbb{Q}$. We assert the following, which we will prove at the conclusion of Section \ref{sec:gridreal}:
+where the sum of cell probabilities is the expected number of spawned hybrid flowers. The decision problem then is whether, for an explicitly represented king grid and its blocked cells, there exists a planting $\ell$ such that $Y_H(\ell) \geq T$ for a given threshold $T \in \mathbb{Q}$. 
+We assert the following, which we will prove at the conclusion of Section \ref{sec:gridreal}:
 
 \begin{theorema}
     The flower placement problem is NP-Complete and maximizing it is NP-Hard.
 \end{theorema}
 
 We approach the proof of this theorem by first demonstrating membership in NP in Section \ref{sec:meminnp}. After proving some elementary bounds of our planting function in Section \ref{sec:elembound} and some lemmas on paths in Section \ref{sec:pathlem}, we construct $H$ in such a way that determining how many hybrid flowers can appear on $H$ is equivalent to solving an NP-Complete problem, in this case Planar Monotone 2-in-4 SAT, in Section \ref{sec:gadlem}. Finally, in Section \ref{sec:gridreal}, we demonstrate that this particular construction of $H$ can be constructed in polynomial time and therefore prove our complexity theorem.  
+
+It is worthy to note that the problem under consideration bears a resemblance to the rainbow 2-domination described in \citet{BonomoEtAl2018}, where every uncolored vertex must have neighbors of both colors and the number of colored vertices is minimized. The primary difference, however, lies primarily with the scoring function and the objective of maximizing it. Thus, empty cells are allowed to hypothetically contribute nothing if their contribution meant a lower overall score.  
 
 \section{Membership in NP} \label{sec:meminnp}
 
@@ -88,7 +91,7 @@ We first assert the following:
 
 Given a planting $\ell$, we count the $C_0$ and $C_1$ neighbors of each vertex and compute its score by the formula provided above. As there are only a finite number of outputs, this can be done by a lookup table. Since every vertex has a degree at most $8$, every nonzero score has a denominator that divides $4200$, given that all denominators are of the form $5s(s-1): 2 \leq s \leq 8$. Then
 $W = \sum_{v \in V(H)}(4200 \cdot \mathrm{Score}(v))$
-is an integer that can be computed in polynomial time. Given that $T \in \mathbb{Q}$, 
+is an integer that can be computed in polynomial time. Given that $T \in \mathbb{Q}$, it follows that, for some integer $a$ and positive nonzero integer $b$,
 \[T = \frac{a}{b}.\]
 Hence, we accept $\ell$ when
 \[b\cdot W \geq 4200\cdot a.\]
@@ -227,7 +230,7 @@ We reduce our problem from monotone 2-in-4 SAT by constructing a graph $H$ and a
 
 Let the whole SAT instance $F$ have $n$ variables, $m$ clauses, and an occurrence set $I$ such that $|I| = 3n = 4m$. For every variable, create a vertex $x_i$; for every clause, create likewise a vertex $c_j$. Noting that we do not precolor any vertices, replace every occurrence $e$ with an endpoint pair $(c_j, x_i)$, with a private path of length $4k_e + 1$ for some natural number $k_e \geq 1$. Add a 2-edge private path $x_i, a_i, b_i$ to each variable afterwards. Call this graph $H$. The following lemmas apply to any choice of integers $k_e\geq 1$. Choosing these integers as part of a polynomial-size king-grid realization remains for Section \ref{sec:gridreal}.
 
-In our graph, each $c_j$ is degree 4, and each $x_i$ has three occurrence paths and 1 private tail. Every other vertex is degree 2, except $b_i$, which has degree 1. We call each occurrence path an \emph{arm}. An arm of length $4k +1$ has $4k$ internal vertices of degree 2 and $2$ external vertices; one is degree 4 and is called the \emph{endpoint}, while the other is degree 4 and is called the \emph{center point}. For our gadget, we work with a four-armed gadget, each arm being of length $4k+1$. Let $I_j\subseteq I$ be the set of occurrences in clause $j$. Then we define our clause gadget and tail gadget as
+In our graph, each $c_j$ is degree 4, and each $x_i$ has three occurrence paths and 1 private tail, which we use to prevent extra points at the variables from offsetting the loss from an unsatisfied clause. Every other vertex is degree 2, except $b_i$, which has degree 1. We call each occurrence path an \emph{arm}. An arm of length $4k +1$ has $4k$ internal vertices of degree 2 and $2$ external vertices; one is degree 4 and is called the \emph{endpoint}, while the other is degree 4 and is called the \emph{center point}. For our gadget, we work with a four-armed gadget, each arm being of length $4k+1$. Let $I_j\subseteq I$ be the set of occurrences in clause $j$. Then we define our clause gadget and tail gadget as
 \[C_j = \{c_j\} \cup \bigcup_{e \in I_j}\{z_{e,1}, \dots, z_{e, 4k_e}\}, \qquad X_i = \{x_i, a_i, b_i\}\]
 respectively. The graph representation of our clause gadget is provided below:
 \[
