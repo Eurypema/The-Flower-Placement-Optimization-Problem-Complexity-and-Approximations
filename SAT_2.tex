@@ -195,7 +195,7 @@ and \emph{external} otherwise.
 
 
 \begin{lemma} \label{lem:armlemmas}
-    Let $c, z_1, \dots, z_{4k}, x:k \geq 1$ be a path of $4k+1$ edges, where $c$ and $x$ may have additional neighbors. Let the score of only the internal vertices $z_i$ be denoted $S$. Then
+    Let $c, z_1, \dots, z_{4k}, x:k \geq 1$ be a path of $4k+1$ edges, where $c$ and $x$ may have additional neighbors. Let the score of only the internal vertices $z_i$ be denoted $S$, where each of these internal vertices has degree 2. Then
     \begin{enumerate}
         \item $S \leq \frac{3}{5} k$
         \item If $\ell(c)=E$ and $\ell(z_1)=E$ then $S \leq \frac{3}{5}k-\frac{3}{10}$
@@ -384,7 +384,7 @@ We first perform a $4^{i}$ expansion for some $i$, multiplying all coordinates b
 Within each $N_{10}(v)$, the three incident routes are straight and use distinct coordinate directions, since every original segment has length at least $4^4$ after expansion.
 We likewise expand our integer grid to be a $(4^4 \cdot L) \times (4^4 \cdot W) = L' \times W'$ rectangle to contain our newly expanded graph (and refer to it as a $L' \times W'$ rectangle, but adjust the dimensions as needed to accommodate any graph alteration). Let our new path be denoted $P_{uv}$, and our expanded graph be denoted $\mathrm{OR}(G_F)_e$.
 
-Our concern now is ensuring that $|P_{uv}| \equiv 1 \text{ mod }4$. Currently, all paths, being of length $4^4 \cdot l_{uv}$, are all such that $|P_{uv}| \equiv 0 \text{ mod }4$. We now perform a length correction step:
+Our concern now is ensuring that $|E(P_{uv})| \equiv 1 \text{ mod }4$. Currently, all paths, being of length $4^4 \cdot l_{uv}$, are all such that $|E(P_{uv})| \equiv 0 \text{ mod }4$. We now perform a length correction step:
 
 For every vertex $u_0$ on $\mathrm{OR}(G_F)_e$ corresponding to a vertex $v\in C \subseteq G_F$, we replace $u_0$ with one of its neighbors in $\mathrm{OR}(G_F)_e$ and modify $P_{uv}$ appropriately for all neighbors $u$ of $v$ on $\mathrm{OR}(G_F)$ in a manner following \citet[p.~241, Fig.~5]{demange2013matching}. Hence, after correction, all paths are of length $4^4 \cdot l_{uv} \pm 1$.
 
