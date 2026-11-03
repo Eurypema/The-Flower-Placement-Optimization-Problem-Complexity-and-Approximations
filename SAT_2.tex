@@ -384,14 +384,21 @@ We likewise expand our integer grid to be a $(4^4 \cdot L) \times (4^4 \cdot W) 
 
 Our concern now is ensuring that $|E(P_{uv})| \equiv 1 \text{ mod }4$. Currently, all paths, being of length $4^4 \cdot l_{uv}$, are all such that $|E(P_{uv})| \equiv 0 \text{ mod }4$. We now perform a length correction step:
 
-For every vertex $u_0$ on $\mathrm{OR}(G_F)_e$ corresponding to a vertex $v\in C \subseteq G_F$, we replace $u_0$ with one of its neighbors in $\mathrm{OR}(G_F)_e$ and modify $P_{uv}$ appropriately for all neighbors $u$ of $v$ on $\mathrm{OR}(G_F)$ in a manner following \citet[p.~241, Fig.~5]{demange2013matching}. Hence, after correction, all paths are of length $4^4 \cdot l_{uv} \pm 1$.
+For every vertex $u_0$ on $\mathrm{OR}(G_F)_e$ corresponding to a vertex $v\in C \subseteq G_F$, we replace $u_0$ with one of its neighbors in $\mathrm{OR}(G_F)_e$ and modify $P_{uv}$ appropriately for all neighbors $u$ of $v$ on $\mathrm{OR}(G_F)$ in a manner following \citet[p.~241, Fig.~5]{demange2013matching}. More concretely, for each clause vertex where the original position is $(x,y)$, move the junction instead to $(x+1,y)$ and, within the square $[-10,10]^2$ centered on $(x,y)$, replace the four incident routes with the following routes, including every grid point on each segment:
+\begin{enumerate}
+    \item East: $(x+1,y) \rightarrow (x+10,y)$
+    \item West: $(x+1,y) \rightarrow (x-10,y)$
+    \item South: $(x+1,y) \rightarrow (x+1, y+8) \rightarrow (x, y+8) \rightarrow (x, y+10)$
+    \item North: $(x+1,y) \rightarrow (x+1, y-8) \rightarrow (x, y-8) \rightarrow (x, y-10)$
+\end{enumerate}
+Delete the old route vertices within the square that are not on these replacement routes, and leave the routes outside the square unchanged. The east route loses one edge, while the other three gain one edge. The replacement routes meet only at the new junction and introduce no unintended grid adjacencies. Hence, after correction, all paths are of length $4^4 \cdot l_{uv} \pm 1$.
 
 However, after this correction, there are still paths of length $\equiv 3 \text{ mod } 4$. For these paths, we need to add a detour to each that increases its length by $2$, making sure to choose each detour to be in the middle of a straight
 segment, at least 10 units from its ends, so that it remains away from bends, junctions, and other routes. We demonstrate this detour, up to translation and rotation, on the vertices
-\[(0,0), (1,0), (2,0), (3,0)\]
+\[(x,y), (x+1,y), (x+2,y), (x+3,y)\]
 by replacing them with
-\[(0,0), (0,1), (1,1), (2,1), (3,1), (3,0)\]
-deleting the old intermediate vertices $(1,0)$ and $(2,0)$, and thus giving us a detour that increases the overall path length by 2. As we have picked a sufficiently large exponent for our expansion, we will have the necessary space for these new detour paths even if we avoid $N_{10}(v_0)$. 
+\[(x,y), (x,y+1), (x+1,y+1), (x+2,y+1), (x+3,y+1), (x+3,y)\]
+deleting the old intermediate vertices $(x+1,y)$ and $(x+2,y)$, and thus giving us a detour that increases the overall path length by 2. As we have picked a sufficiently large exponent for our expansion, we will have the necessary space for these new detour paths even if we avoid $N_{10}(v_0)$. 
 
 Applying both corrections to these paths, let our new graph be denoted $U$. We are, however, still missing our tails, so let us add the tails to every vertex $v_i \in U$ corresponding to vertices $v \in X \subseteq G_F$. Since we have explicitly chosen our expansion exponent to be such that every other vertex in $N_{10}(v)$ is in an incident occurrence path, we can add the tails to the unused direction on each variable, noting that every variable, having three occurrences, must have an unused direction. Let this tail be comprised of two new vertices $a_i, b_i$ and two new edges $(v_i, a_i), (a_i, b_i)$. We note that adding this tail, given that $N_{10}(v)$ only comprises of the variable $v$ and vertices in occurrence paths incident to it, does not create new adjacencies. Let this new graph be denoted $U'$. 
 
