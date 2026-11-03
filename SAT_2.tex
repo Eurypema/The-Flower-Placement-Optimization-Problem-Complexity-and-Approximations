@@ -40,7 +40,7 @@ We study a placement optimization problem on induced subgraphs of $n \times m$ k
 
 \section{Background and Problem Statement} \label{sec:probstatement}
 
-The optimal planting problem originates from a flower-planting minigame in the game Hello Kitty Island Adventure, where players can plant flowers on a plot and, over time, new flowers will grow on the plot with a chance that a hybrid flower will grow instead. The probability of a hybrid flower appearing is determined by a fixed function that takes as its parameters the flowers immediately adjacent to it. There is no limitation on how many flowers of any color can appear. 
+The optimal planting problem originates from a flower-planting minigame in the game \emph{Hello Kitty Island Adventure}, where players can plant flowers on a plot and, over time, new flowers will grow on the plot with a chance that a hybrid flower will grow instead. The probability of a hybrid flower appearing is determined by a fixed function that takes as its parameters the flowers immediately adjacent to it. There is no limitation on how many flowers of any color can appear. 
 There are online tools, such as that by \citet{auevi_hkia_flower}, to simulate the planting as well as find optimal plantings for this minigame. However, to the author's knowledge, the computational complexity of maximizing expected yield (at least for the model defined below) has not been previously established. 
 
 We first present a formal treatment of the problem, restricting ourselves to the simplest case of only two flower colors and the expected yield after only one round: Given an explicitly represented $n \times m$ king graph $G$, let $H$ be an induced subgraph of $G$ and let $V \subseteq \mathbb{Z}^2$ be the set of cells in $H$. Every cell in $V(G) \setminus V(H)$ is blocked and unused. We say that cells $u$ and $v$ in $V$ are adjacent if and only if the Chebyshev distance between the two cells is 1, i.e., $||u-v||_{\infty} = 1$. 
@@ -384,12 +384,12 @@ We likewise expand our integer grid to be a $(4^4 \cdot L) \times (4^4 \cdot W) 
 
 Our concern now is ensuring that $|E(P_{uv})| \equiv 1 \text{ mod }4$. Currently, all paths, being of length $4^4 \cdot l_{uv}$, are all such that $|E(P_{uv})| \equiv 0 \text{ mod }4$. We now perform a length correction step:
 
-For every vertex $u_0$ on $\mathrm{OR}(G_F)_e$ corresponding to a vertex $v\in C \subseteq G_F$, we replace $u_0$ with one of its neighbors in $\mathrm{OR}(G_F)_e$ and modify $P_{uv}$ appropriately for all neighbors $u$ of $v$ on $\mathrm{OR}(G_F)$ in a manner following \citet[p.~241, Fig.~5]{demange2013matching}. More concretely, for each clause vertex where the original position is $(x,y)$, move the junction instead to $(x+1,y)$ and, within the square $[-10,10]^2$ centered on $(x,y)$, replace the four incident routes with the following routes, including every grid point on each segment:
+For every vertex $u_0$ on $\mathrm{OR}(G_F)_e$ corresponding to a vertex $v\in C \subseteq G_F$, we replace $u_0$ with one of its neighbors in $\mathrm{OR}(G_F)_e$ and modify $P_{uv}$ appropriately for all neighbors $u$ of $v$ on $\mathrm{OR}(G_F)$ in a manner following \citet[p.~241, Fig.~5]{demange2013matching}. More concretely, for each clause vertex where the original position is $(x,y)$, move the junction instead to $(x+1,y)$ and, within the square $[x-10,x+10]\times [y-10,y+10]$ centered on $(x,y)$, replace the four incident routes with the following routes, including every grid point on each segment:
 \begin{enumerate}
     \item East: $(x+1,y) \rightarrow (x+10,y)$
     \item West: $(x+1,y) \rightarrow (x-10,y)$
-    \item South: $(x+1,y) \rightarrow (x+1, y+8) \rightarrow (x, y+8) \rightarrow (x, y+10)$
-    \item North: $(x+1,y) \rightarrow (x+1, y-8) \rightarrow (x, y-8) \rightarrow (x, y-10)$
+    \item North: $(x+1,y) \rightarrow (x+1, y+8) \rightarrow (x, y+8) \rightarrow (x, y+10)$
+    \item South: $(x+1,y) \rightarrow (x+1, y-8) \rightarrow (x, y-8) \rightarrow (x, y-10)$
 \end{enumerate}
 Delete the old route vertices within the square that are not on these replacement routes, and leave the routes outside the square unchanged. The east route loses one edge, while the other three gain one edge. The replacement routes meet only at the new junction and introduce no unintended grid adjacencies. Hence, after correction, all paths are of length $4^4 \cdot l_{uv} \pm 1$.
 
@@ -404,10 +404,9 @@ Applying both corrections to these paths, let our new graph be denoted $U$. We a
 
 Given that each path is such that every occurrence path is of length $4k_e + 1$ for some natural number $k_e \geq 1$ and has private interiors, and each variable has a $2$-edge private path, $U'$ therefore induces $H$ on the integer grid. What remains now is to embed $U'$ on the king grid. 
 
-Note that in the proof of Corollary~6 in \citet[pp.~14-15]{brunner2026solo}, by rotating $U'$ by $45^\circ$ and then scaling by $\sqrt{2}$, rook moves on a chessboard can become bishop moves. In the same manner, we can embed $U'$ on a king grid by applying the linear transformation
+Note that in the proof of Corollary~6 in \citet[pp.~14-15]{brunner2026solo}, by rotating $U'$ by $45^\circ$ and then scaling by $\sqrt{2}$, rook moves on a chessboard can become bishop moves. In the same manner, we can embed $U'$ on a king grid. We start by translating $U'$ so that all of its coordinates are positive and lie in $[0,L'] \times [0, W']$ grid. Then, applying the linear transformation
 \[L(x,y) = (x+y, x-y)\]
-to all vertices. Letting the dimensions of our king grid be an $(L'+W') \times (L'+W')$ square is sufficient to contain our transformed $U'$.
-After embedding, the edges occupy only the diagonals of the king grid. Block every unused cell and let our embedded graph be denoted $U''$. 
+to all vertices, then translating the graph again by shifting it upwards by $W'$,  we note that an $(L'+W') \times (L'+W')$ square is sufficient to contain our transformed $U'$. These dimensions will be the dimensions of our king grid. After embedding, note that the edges occupy only the diagonals of the king grid. Block every unused cell and let our embedded graph be denoted $U''$. 
 
 All that remains is checking that no unwanted adjacencies occur on $U''$, as otherwise it would not induce $H$. Specifically, given points $p,q \in U'$, where $p = (x_1, y_1)$ and $q = (x_2, y_2)$, we want to prove that
 \[||L(p) - L(q)||_\infty =1 \iff ||p-q||_1 = 1.\]
