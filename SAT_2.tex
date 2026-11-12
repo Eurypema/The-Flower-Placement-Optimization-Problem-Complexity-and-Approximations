@@ -110,7 +110,7 @@ x_{i_4} &&&&&&&& x_{i_3}
 \]
 
 As we shall demonstrate, to attain the upper scoring bound $T$ on $H$, each clause center needs to be empty, and each connecting clause arm needs to have an alternating pattern for the arms to attain their internal score bounds. 
-We approach the proof of this theorem by first demonstrating membership in NP in Section \ref{sec:meminnp}. After proving some elementary bounds of our planting function in Section \ref{sec:elembound} and some lemmas on paths in Section \ref{sec:pathlem} that build up to the optimization of arm plantings, we then continue with coloring lemmas in Section \ref{sec:gadlem} for our gadgets that conclude with the assertion that optimally planting $H$ is equivalent to finding a 2-in-4 satisfying assignment for $F$, so it is exactly as difficult as Planar Monotone 2-in-4 SAT. Finally, in Section \ref{sec:gridreal}, we demonstrate that this particular construction of $H$ can be constructed in polynomial time and therefore prove our complexity theorem.  
+We approach the proof of this theorem by first demonstrating membership in NP in Section \ref{sec:meminnp}. After proving some elementary bounds of our planting function in Section \ref{sec:elembound} and some lemmas on paths in Section \ref{sec:pathlem} that build up to the optimization of arm plantings, we then continue with coloring lemmas in Section \ref{sec:gadlem} for our gadgets that conclude with the assertion that a planting on $H$ attaining $T$ is equivalent to finding a 2-in-4 satisfying assignment for $F$, so it is exactly as difficult as Planar Monotone 2-in-4 SAT. Finally, in Section \ref{sec:gridreal}, we demonstrate that this particular construction of $H$ can be constructed in polynomial time and therefore prove our complexity theorem.  
 
 \section{Membership in NP} \label{sec:meminnp}
 
@@ -171,7 +171,7 @@ where all scores are computed using neighbors in $H$. We say that a vertex $z_{i
 and \emph{external} otherwise.
 
 \begin{corollary} \label{cor:armcontribute}
-    Given a path $P_{t}$, at most $\lfloor \frac{t-1}{2} \rfloor$ vertices can contribute.
+    Given an isolated path $P_{t}$, at most $\lfloor \frac{t-1}{2} \rfloor$ vertices can contribute.
 \end{corollary}
 \begin{proof}
     The case $t=1$ is immediate by Lemma \ref{lem:elementarybounds}.2. For $t=2$, note that endpoints, being degree 1, cannot contribute by Lemma \ref{lem:elementarybounds}.2. Let $t \geq 3$. Only internal vertices can contribute, of which $t-2$ exist, and no two adjacent vertices can both contribute by Lemma \ref{lem:elementarybounds}.4. Therefore, there are at most $\lceil \frac{t-2}{2}\rceil = \lfloor \frac{t-1}{2} \rfloor$ contributing vertices.
@@ -255,7 +255,7 @@ and \emph{external} otherwise.
 
 \section{Gadget Lemmas} \label{sec:gadlem}
 
-Having now described the internal-bound coloring for the arms of our clause gadget, we can now move on to describing the internal-bound coloring for our entire clause gadget. We first note that we can divide our graph $H$ into clause gadgets and variable gadgets.
+Having now described the internal-bound coloring for the arms of our clause gadget, we now establish the bound for an entire clause gadget. We first note that we can divide our graph $H$ into clause gadgets and variable gadgets.
 
 \begin{lemma} \label{lem:partition}
     The sets $C_1, \dots, C_m, X_1, \dots, X_n$ partition $V(H)$. Consequently, for every planting $\ell$,
