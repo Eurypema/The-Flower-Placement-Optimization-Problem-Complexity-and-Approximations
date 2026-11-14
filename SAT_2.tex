@@ -168,7 +168,7 @@ Y_H(S;\ell)=\sum_{v\in S}\mathrm{Score}(v),
 \]
 where all scores are computed using neighbors in $H$. We say that a vertex $z_{i}$ is \emph{internal} precisely when
 \[2 \leq i \leq t-1\]
-and \emph{external} otherwise.
+and \emph{external} otherwise. We first note that, given the bounds that we have proven for the formula, we know which vertices can contribute to the planting score for some isolated path $P_t$.
 
 \begin{corollary} \label{cor:armcontribute}
     Given an isolated path $P_{t}$, at most $\lfloor \frac{t-1}{2} \rfloor$ vertices can contribute.
@@ -176,6 +176,8 @@ and \emph{external} otherwise.
 \begin{proof}
     The case $t=1$ is immediate by Lemma \ref{lem:elementarybounds}.2. For $t=2$, note that endpoints, being degree 1, cannot contribute by Lemma \ref{lem:elementarybounds}.2. Let $t \geq 3$. Only internal vertices can contribute, of which $t-2$ exist, and no two adjacent vertices can both contribute by Lemma \ref{lem:elementarybounds}.4. Therefore, there are at most $\lceil \frac{t-2}{2}\rceil = \lfloor \frac{t-1}{2} \rfloor$ contributing vertices.
 \end{proof}
+
+Likewise, we can also understand the pattern that an optimal planting on our path would take. 
 
 \begin{corollary} \label{cor:altcolorpattern}
     Let $P_t$ be an isolated path with $t=2s+1 \geq 3$ vertices $z_1, z_2, \dots, z_t$ and $\ell$ be an optimal planting. If $\ell (z_1) = C_0$, then
@@ -196,23 +198,20 @@ and \emph{external} otherwise.
     Each of these vertices must be empty, with neighbors of alternating colors. This is exactly the displayed pattern.
 \end{proof}
 
+Given that we know that the coloring needs to alternate for an optimal coloring, we can therefore predict which vertices are colored.
+
 \begin{corollary} \label{cor:optplantingevenemptoddcolor}
-     If $t=2s+1 \geq 3$, then every optimal planting has contributors at positions $2, 4, \dots, 2s$, while vertices at positions $1, 3, \dots, 2s+1$ alternate in color.
+     If $t=2s+1 \geq 3$, then every optimal planting has contributors at positions $2, 4, \dots, 2s$, while vertices at positions $1, 3, \dots, 2s+1$ alternate in color. Moreover, endpoints have the same color if $s$ is even and opposite colors if $s$ is odd. 
 \end{corollary}
 
 \begin{proof}
     Immediate from Corollary \ref{cor:altcolorpattern}.
 \end{proof}
 
-\begin{corollary} \label{cor:endpointcolor}
-    For an optimal planting on an isolated path $P_{2s+1}$, with $s\geq 1$, endpoints have the same color if $s$ is even and opposite colors if $s$ is odd. 
-\end{corollary}
+With these observations, we can now write the following lemma to establish the bounds on the arms of our clause gadget, which we depict in Figure \ref{fig:coloredarm}.
 
-\begin{proof}
-    Immediate from Corollary \ref{cor:optplantingevenemptoddcolor}.
-\end{proof}
-
-\begin{lemma} \label{lem:optimalplanting}
+\begin{comment}
+    \begin{lemma} \label{lem:optimalplanting}
     For isolated paths $P_t:t \geq 1$ and plantings $\ell$, 
     \[Y_H(P_t;\ell) \leq \frac{3}{10} \lfloor \frac{t-1}{2} \rfloor\]
     with equality if and only if $\ell$ is optimally colored. 
@@ -224,6 +223,7 @@ and \emph{external} otherwise.
     To attain it, leave every even-indexed vertex empty and alternate colors on the odd-indexed vertices. Every even-indexed internal vertex contributes $\frac{3}{10}$, and there are $\lfloor(t-1)/2\rfloor$ such vertices.
     Thus the upper bound is the maximum achievable score, and equality holds exactly for optimal plantings. 
 \end{proof}
+\end{comment}
 
 \begin{lemma} \label{lem:armlemmas}
     Let $c, z_1, \dots, z_{4k}, x:k \geq 1$ be a path of $4k+1$ edges, where $c$ and $x$ may have additional neighbors. Let the score of only the internal vertices $z_i$ be denoted $S$, where each of these internal vertices has degree 2. Then
@@ -234,6 +234,13 @@ and \emph{external} otherwise.
         \item Either prescribed color of $x$ extends to planting with $\ell(c) = E$ and $S = \frac{3}{5}k$.
     \end{enumerate}
 \end{lemma}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{coloredarm.png}
+    \caption{An optimally colored arm, with one endpoint being a clause vertex and the other a variable vertex with a two-vertex tail}
+    \label{fig:coloredarm}
+\end{figure}
 
 \begin{proof}
 \text{ }
@@ -266,6 +273,8 @@ Having now described the internal-bound coloring for the arms of our clause gadg
     By construction, every clause vertex and every private arm interior belongs to exactly one clause block. Likewise, every variable vertex and its two private tail vertices belong to exactly one variable block. These exhaust the construction. Summing the vertex scores over this partition gives the identity.
 \end{proof}
 
+Thus, if we can obtain bounds for the local plantings on our clause gadgets and variable gadgets, we can obtain a bound for the entire planting on our graph by summing the bounds up together. We first begin by noting the bound of the former.
+
 \begin{lemma} \label{lem:gadgetbound}
     Let 
     \[A_j = \frac{3}{5} \sum_{e \in I_j} k_e, \qquad B_j = A_j + \frac{1}{5}.\]
@@ -289,6 +298,8 @@ Having now described the internal-bound coloring for the arms of our clause gadg
     with equality requiring the center to score $\frac{1}{5}$ and every arm to attain its internal bound. By Lemma \ref{lem:elementarybounds}.5, the center then has exactly two neighbors of each color, and by Lemma \ref{lem:armlemmas}.3, each variable endpoint is the same color as the corresponding neighbor in the center. Hence, the endpoints must be colored such that two are colored $C_0$ and two are colored $C_1$.
 \end{proof}
 
+A diagram illustrating a clause gadget with a planting attaining its scoring bound is provided in Figure \ref{fig:coloredclause}. One useful corollary result of this bound is that, provided we know the assignments of our variable endpoints on our clause gadget, we will be able to know whether or not our gadget can admit a planting with a score that is the bound we calculated.
+
 \begin{corollary} \label{cor:optplantcond}
     Suppose that $C_j$ is such that the four variable endpoints of clause $j$ are assigned exactly two labels $C_0$ and two labels $C_1$. Then the gadget admits a planting attaining $B_j$.
 \end{corollary}
@@ -296,6 +307,15 @@ Having now described the internal-bound coloring for the arms of our clause gadg
 \begin{proof}
     Suppose $\ell(c_j) = E$. By Lemma \ref{lem:armlemmas}.4, each arm attains a score $\frac{3}{5}k_e$. By Lemma \ref{lem:armlemmas}.3, each neighbor of the center has the corresponding endpoint color. Thus, the center has exactly two neighbors of each color and contributes $\frac{1}{5}$. Summing gives $Y_H(C_j;\ell)=B_j$.
 \end{proof}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{coloredclause.eps}
+    \caption{A clause gadget with a planting that attains its scoring bound.}
+    \label{fig:coloredclause}
+\end{figure}
+
+Now we move our attention to establishing a bound for the variable gadget, which is depicted in Figure \ref{fig:coloredarm}.
 
 \begin{lemma} \label{lem:tailbound}
     For $X_i = \{x_i, a_i, b_i\}$, every planting satisfies 
@@ -311,6 +331,8 @@ Having now described the internal-bound coloring for the arms of our clause gadg
     with equality when $x_i$ and $b_i$ are alternately-colored and $a_i$ is empty. 
 \end{proof}
 
+With this bound, we can now establish a bound on plantings in general.
+
 \begin{lemma} \label{lem:plantbound}
     Let $K = \sum_{e\in I}k_e$ and set 
     \[T= \sum_{j=1}^m B_j + \frac{3}{10}n = \frac{3}{10}n + \frac{3}{5}K + \frac{1}{5}m.\] 
@@ -321,6 +343,8 @@ Having now described the internal-bound coloring for the arms of our clause gadg
 \begin{proof}
     Follows from Lemma \ref{lem:gadgetbound} and Lemma \ref{lem:tailbound} by summing the components in Lemma \ref{lem:partition}.
 \end{proof}
+
+We note that equality in this case forces certain conditions on the local plantings for the clause and variable gadgets.
 
 \begin{corollary} \label{cor:thresholdgadgetbound}
     A planting $\ell$ satisfies $Y_H(\ell)=T$ if and only if
@@ -338,6 +362,8 @@ Having now described the internal-bound coloring for the arms of our clause gadg
     and \ref{lem:tailbound}. The sum equals $T$ exactly when every block attains its bound.
 \end{proof}
 
+Now we are ready to demonstrate that having a planting on our graph whose scoring reaches or exceeds our threshold $T$ is equivalent to finding a 2-in-4 satisfying assignment. We first make the following observation:
+
 \begin{observation} \label{obs:sattogadget}
     The formula $F$ has a 2-in-4 satisfying assignment if and only if there exists a configuration for $\{x_1, \dots, x_n\}$ such that every clause $c_j$ has exactly an input sum of $2$. 
 \end{observation}
@@ -345,6 +371,8 @@ Having now described the internal-bound coloring for the arms of our clause gadg
 \begin{proof}
     The input sum counts exactly the occurrences assigned 1, so this is the definition of a 2-in-4 satisfying assignment.
 \end{proof}
+
+Armed with this, we can now assert our lemma.
 
 \begin{lemma} \label{lem:equivalence}
     The formula $F$ has a 2-in-4 satisfying assignment if and only if there exists a planting $\ell$ such that $Y_H(\ell) \geq T$. 
@@ -398,16 +426,28 @@ segment, at least 10 units from its ends, so that it remains away from bends, ju
 \[(x,y), (x+1,y), (x+2,y), (x+3,y)\]
 by replacing them with
 \[(x,y), (x,y+1), (x+1,y+1), (x+2,y+1), (x+3,y+1), (x+3,y)\]
-deleting the old intermediate vertices $(x+1,y)$ and $(x+2,y)$, and thus giving us a detour that increases the overall path length by 2. As we have picked a sufficiently large exponent for our expansion, we will have the necessary space for these new detour paths even if we avoid $N_{10}(v_0)$. 
+deleting the old intermediate vertices $(x+1,y)$ and $(x+2,y)$, and thus giving us a detour that increases the overall path length by 2. As we have picked a sufficiently large exponent for our expansion, we will have the necessary space for these new detour paths even if we avoid $N_{10}(v_0)$. The length-correcting steps above are noted in Figure \ref{fig:lengthcorrect}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{lengthcorrect.eps}
+    \caption{Correcting the lengths of the occurrence-paths.}
+    \label{fig:lengthcorrect}
+\end{figure}
 
 Applying both corrections to these paths, let our new graph be denoted $U$. We are, however, still missing our tails, so let us add the tails to every vertex $v_i \in U$ corresponding to vertices $v \in X \subseteq G_F$. Since we have explicitly chosen our expansion exponent to be such that every other vertex in $N_{10}(v)$ is in an incident occurrence path, we can add the tails to the unused direction on each variable, noting that every variable, having three occurrences, must have an unused direction. Let this tail be comprised of two new vertices $a_i, b_i$ and two new edges $(v_i, a_i), (a_i, b_i)$. We note that adding this tail, given that $N_{10}(v)$ only comprises of the variable $v$ and vertices in occurrence paths incident to it, does not create new adjacencies. Let this new graph be denoted $U'$. 
 
 Given that each path is such that every occurrence path is of length $4k_e + 1$ for some natural number $k_e \geq 1$ and has private interiors, and each variable has a $2$-edge private path, $U'$ therefore induces $H$ on the integer grid. What remains now is to embed $U'$ on the king grid. 
 
-Note that in the proof of Corollary~6 in \citet[pp.~14-15]{brunner2026solo}, by rotating $U'$ by $45^\circ$ and then scaling by $\sqrt{2}$, rook moves on a chessboard can become bishop moves. In the same manner, we can embed $U'$ on a king grid. We start by translating $U'$ so that all of its coordinates are nonnegative and lie in a $[0, L'] \times [0, W']$ grid. Then, applying the linear transformation
+Note that in the proof of Corollary~6 in \citet[pp.~14-15]{brunner2026solo}, by rotating $U'$ by $45^\circ$ and then scaling by $\sqrt{2}$, rook moves on a chessboard can become bishop moves. In the same manner, we can embed $U'$ on a king grid. We start by translating $U'$ so that all of its coordinates are nonnegative and lie in a $[0, L'] \times [0, W']$ grid. Then, applying the linear transformation 
 \[L(x,y) = (x+y, x-y)\]
-to all vertices, then translating the graph again by shifting it upwards by $W'$,  we obtain coordinates in a $[0,L' + W']^2$ square. A king grid with $L' + W'+1$ cells on each side is therefore sufficient to contain our transformed $U'$. After embedding, note that the edges occupy only the diagonals of the king grid. Block every unused cell and let our embedded graph be denoted $U''$. 
-
+to all vertices, then translating the graph again by shifting it upwards by $W'$,  we obtain coordinates in a $[0,L' + W']^2$ square. A king grid with $L' + W'+1$ cells on each side is therefore sufficient to contain our transformed $U'$. After embedding, note that the edges occupy only the diagonals of the king grid. Block every unused cell and let our embedded graph be denoted $U''$. An illustration of the process is provided in Figure \ref{fig:rookking}.
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{rooktoking.eps}
+    \caption{Embedding the graph into the king grid.}
+    \label{fig:rookking}
+\end{figure}
 All that remains is checking that no unwanted adjacencies occur on $U''$, as otherwise it would not induce $H$. Specifically, given points $p,q \in U'$, where $p = (x_1, y_1)$ and $q = (x_2, y_2)$, we want to prove that
 \[||L(p) - L(q)||_\infty =1 \iff ||p-q||_1 = 1.\]
 Let $a = x_1 - x_2$ and $b = y_1 - y_2$. Since we are working in two dimensions, this simplifies to
