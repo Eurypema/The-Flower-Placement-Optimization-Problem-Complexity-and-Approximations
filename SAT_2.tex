@@ -315,7 +315,7 @@ A diagram illustrating a clause gadget with a planting attaining its scoring bou
     \label{fig:coloredclause}
 \end{figure}
 
-Now we move our attention to establishing a bound for the variable gadget, which is depicted in Figure \ref{fig:coloredarm}.
+Now we move our attention to establishing a bound for the variable gadget, which is depicted in Figure \ref{fig:coloredarm}. 
 
 \begin{lemma} \label{lem:tailbound}
     For $X_i = \{x_i, a_i, b_i\}$, every planting satisfies 
@@ -466,6 +466,12 @@ We can now state the following theorem:
 \begin{proof}
     By Lemma \ref{lem:NPmembership}, the flower placement problem is in NP, and, by Lemma \ref{lem:equivalence} and Lemma \ref{lem:gridrealization}, the problem is reducible from a known NP-complete problem. Hence, any algorithm that could compute the exact optimal expected yield would decide the threshold problem by comparison, so the optimization problem is NP-hard.
 \end{proof}
+
+\section{Conclusion}
+
+In conclusion, we have established NP-completeness for our one-round flower placement decision problem on variable-sized king grids with blocked cells, and likewise proven that the maximization of the expected yield is NP-hard. While the particular problem is motivated by the game, the result does not establish hardness for the fixed collection of plots available in-game. A grid with $B$ usable cells has $3^B$ possible plantings, but this might still be far too many to check in practice. 
+
+In the game, multiple flower colors are supported, so the decision problem can be extended to an arbitrary number of flowers. These variants are not covered and require further investigation, since our argument relies on representing the binary inputs of a variable as one of two colors. Likewise, we only analyze the expected yield over a single round, but modelling more rounds requires a dynamic model as later rounds change the board state. 
 
 \section*{Acknowledgments}
 
