@@ -35,7 +35,7 @@
 \maketitle
 
 \begin{abstract}
-We study a placement optimization problem on induced subgraphs of $n \times m$ king graphs. Each vertex is assigned one of two colors or left empty, and empty vertices contribute to a total score as determined by the number of neighboring vertices of each color. We formulate the threshold decision problem and analyze its membership in NP. We give a reduction from planar monotone 2-in-4 SAT with exactly three occurrences per variable, using four-armed clause gadgets and private two-edge variable tails. The resulting graph admits a planting attaining a specified global threshold if and only if the formula is satisfiable. We then demonstrate that we can derive this graph from the formula and embed it onto the king graph, all in polynomial time. Therefore, this placement problem is NP-complete, and optimizing it is therefore NP-hard. 
+We study a placement optimization problem on induced subgraphs of $n \times m$ king graphs where each vertex is assigned one of two colors or left empty and empty vertices contribute to a total score as determined by the number of neighboring vertices of each color, and give a reduction from planar monotone 2-in-4 SAT with exactly three occurrences per variable using four-armed clause gadgets and private two-edge variable tails. The resulting graph admits a planting attaining a specified global threshold if and only if the formula is satisfiable. We demonstrate that we can derive this graph from the formula and embed it onto the king graph, all in polynomial time. Therefore, this placement problem is NP-complete, and optimizing it is NP-hard. 
 \end{abstract}
 
 \section{Background and Problem Statement} \label{sec:probstatement}
@@ -83,9 +83,9 @@ colors. Its $2k_e$ color changes put the variable's color next to
 the center (Lemma~\ref{lem:armlemmas}). The reduction outputs the
 king-grid realization of $H$ and the threshold $T$. To attain $T$, each clause gadget must attain its own bound, which we demonstrate is equivalent to forcing a 2-in-4 satisfying assignment for $F$.
 
-Formally, let the whole SAT instance $F$ have $n$ variables, $m$ clauses, and an occurrence set $I$ such that $|I| = 3n = 4m$. For every variable, create a vertex $x_i$; for every clause, create likewise a vertex $c_j$. These vertices are not precolored. Next, we replace every occurrence $e$ with an endpoint pair $(c_j, x_i)$ and a private path of length $4k_e + 1$ for some natural number $k_e \geq 1$. Since a variable may occur more than once in a clause, and each occurrence is separately counted, we may as a result have parallel edges between a clause and a variable, since each occurrence receives a separate path with disjoint interiors, even if they share the same variable and clause endpoints. Finally, we add a 2-edge private path $x_i, a_i, b_i$ to each variable afterwards and call this graph $H$. The following lemmas apply to any choice of integers $k_e\geq 1$. Choosing these integers as part of a polynomial-size king-grid realization remains for Section \ref{sec:gridreal}.
+Formally, let the whole SAT instance $F$ have $n$ variables, $m$ clauses, and an occurrence set $I$ such that $|I| = 3n = 4m$. For every variable, create a vertex $x_i$; for every clause, create likewise a vertex $c_j$. These vertices are not precolored. Next, we replace every occurrence $e$ with an endpoint pair $(c_j, x_i)$ and a private path of length $4k_e + 1$ for some natural number $k_e \geq 1$. Since a variable may occur more than once in a clause, and each occurrence is separately counted, we may as a result have parallel edges between a clause and a variable, since each occurrence receives a separate path with disjoint interiors, even if they share the same variable and clause endpoints. Finally, we add a 2-edge private path $x_i, a_i, b_i$ to each variable afterwards, which we call a \emph{tail}, and call this graph $H$. This tail is necessary to force the variable to have a color assignment for a planting that attains a score equal to the upper bound. The following lemmas apply to any choice of integers $k_e\geq 1$. Choosing these integers as part of a polynomial-size king-grid realization remains for Section \ref{sec:gridreal}.
 
-Our graph $H$ is partitioned into clause and variable gadgets, which we will prove later. Each $c_j$ is degree 4, and each $x_i$ has three occurrence paths and 1 private tail, which we use to prevent extra points at the variables from offsetting the loss from an unsatisfied clause. Every other vertex is degree 2, except $b_i$, which has degree 1. We call each occurrence path an \emph{arm}. An arm of length $4k +1$ has $4k$ internal vertices of degree 2 and $2$ external vertices; one is degree 4 and is called the \emph{endpoint}, while the other is degree 4 and is called the \emph{center point}. For our gadget, we work with a four-armed gadget, each arm being of length $4k+1$. Let $I_j\subseteq I$ be the set of occurrences in clause $j$. Then we define our clause gadget and variable gadget as
+Our graph $H$ is partitioned into clause and variable gadgets, which we will prove later. Each $c_j$ is degree 4, and each $x_i$ has three occurrence paths and 1 private tail. Every other vertex is degree 2, except $b_i$, which has degree 1. We call each occurrence path an \emph{arm}. An arm of length $4k +1$ has $4k$ internal vertices of degree 2 and $2$ external vertices; one is degree 4 and is called the \emph{endpoint}, while the other is degree 4 and is called the \emph{center point}. For our gadget, we work with a four-armed gadget, each arm being of length $4k+1$. Let $I_j\subseteq I$ be the set of occurrences in clause $j$. Then we define our clause gadget and variable gadget as
 \[C_j = \{c_j\} \cup \bigcup_{e \in I_j}\{z_{e,1}, \dots, z_{e, 4k_e}\}, \qquad X_i = \{x_i, a_i, b_i\}\]
 respectively. The graph representation of our clause gadget is provided below:
 \[
@@ -112,7 +112,15 @@ x_{i_4} &&&&&&&& x_{i_3}
 \end{tikzcd}
 \]
 
-As we shall demonstrate, to attain the upper scoring bound $T$ on $H$, each clause center needs to be empty, and each connecting clause arm needs to have an alternating pattern for the arms to attain their internal score bounds. 
+As we shall demonstrate, to attain the upper scoring bound $T$ on $H$, each clause center needs to be empty, and each connecting clause arm needs to have an alternating pattern for the arms to attain their internal score bounds. Our variable tails make it so that having a nonempty clause center does not lead to an improved score, while the arms, having attained their internal bounds, cannot provide a greater score. A diagram of the clause gadget and the variable gadgets with a planting that attains the bounds for both is provided in Figure \ref{fig:coloredclause}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{coloredclause.eps}
+    \caption{A clause gadget $C_j$ with a planting that attains its scoring bound. Tails are included.}
+    \label{fig:coloredclause}
+\end{figure}
+
 We approach the proof of this theorem by first demonstrating membership in NP in Section \ref{sec:meminnp}. After proving some elementary bounds of our planting function in Section \ref{sec:elembound} and some lemmas on paths in Section \ref{sec:pathlem} that build up to the optimization of arm plantings, we then continue with coloring lemmas in Section \ref{sec:gadlem} for our gadgets that conclude with the assertion that a planting on $H$ attaining $T$ is equivalent to finding a 2-in-4 satisfying assignment for $F$, so it is exactly as difficult as Planar Monotone 2-in-4 SAT. Finally, in Section \ref{sec:gridreal}, we demonstrate that this particular construction of $H$ can be constructed in polynomial time and therefore prove our complexity theorem.  
 
 \section{Membership in NP} \label{sec:meminnp}
@@ -248,7 +256,7 @@ With these observations, we can now write the following lemma to establish the b
 \begin{proof}
 \text{ }
 \begin{enumerate}
-    \item Directly follows from Lemma \ref{lem:elementarybounds} and Corollary \ref{cor:armcontribute}, applying with unscored endpoints. 
+    \item If we pair the $4k$ internal vertices together as $(z_{2i-1}, z_{2i})$ for $1 \le i \le 2k$, then at most one vertex in each pair contributes, and its contribution is at most $\frac{3}{10}$. Hence $S \le \frac{3}{5}k$, regardless of the assignment of $c$ and $x$. 
     \item If $\ell(c)=E$ and $\ell(z_1)=E$, then neither $z_1$ nor $z_2$ can contribute. Among the remaining $4k-2$ internal vertices, at most $2k-1$ can contribute. Therefore,
     \[
     S\leq\frac{3}{10}(2k-1)
@@ -310,13 +318,6 @@ A diagram illustrating a clause gadget with a planting attaining its scoring bou
 \begin{proof}
     Suppose $\ell(c_j) = E$. By Lemma \ref{lem:armlemmas}.4, each arm attains a score $\frac{3}{5}k_e$. By Lemma \ref{lem:armlemmas}.3, each neighbor of the center has the corresponding endpoint color. Thus, the center has exactly two neighbors of each color and contributes $\frac{1}{5}$. Summing gives $Y_H(C_j;\ell)=B_j$.
 \end{proof}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{coloredclause.eps}
-    \caption{A clause gadget with a planting that attains its scoring bound.}
-    \label{fig:coloredclause}
-\end{figure}
 
 Now we move our attention to establishing a bound for the variable gadget, which is depicted in Figure \ref{fig:coloredarm}. 
 
