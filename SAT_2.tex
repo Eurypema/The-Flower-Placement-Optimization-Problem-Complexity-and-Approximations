@@ -426,7 +426,7 @@ For every vertex $u_0$ on $\mathrm{OR}(G_F)_e$ corresponding to a vertex $v\in C
 Delete the old route vertices within the square that are not on these replacement routes, and leave the routes outside the square unchanged. The east route loses one edge, while the other three gain one edge. The replacement routes meet only at the new junction and introduce no unintended grid adjacencies. Hence, after correction, all paths are of length $4^4 \cdot l_{uv} \pm 1$.
 
 However, after this correction, there are still paths of length $\equiv 3 \text{ mod } 4$, particularly those routes that are eastbound where their lengths were subtracted by 1. For these paths, we need to add a detour to each that increases its length by $2$, making sure to choose each detour to be in the middle of a straight
-segment. These detours are added $128$ units east of the original clause of the path to ensure that they remain away from bends, junctions, and other routes. We demonstrate this detour, up to translation and rotation, on the vertices
+segment. These detours are added $128$ units east of the original clause vertex to ensure that they remain away from bends, junctions, and other routes. We demonstrate this detour, up to translation and rotation, on the vertices
 \[(x,y), (x+1,y), (x+2,y), (x+3,y)\]
 by replacing them with
 \[(x,y), (x,y+1), (x+1,y+1), (x+2,y+1), (x+3,y+1), (x+3,y)\]
